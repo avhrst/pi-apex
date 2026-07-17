@@ -2,9 +2,6 @@ name: Publish npm package
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - chore/npm-release
 
 permissions:
   contents: read
