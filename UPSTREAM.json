@@ -1,0 +1,8 @@
+{
+  "repository": "https://github.com/oracle/skills.git",
+  "commit": "30e30dbcbf5f92f3564bc85f8fd59d32736adcd6",
+  "source_path": "apex/apexlang",
+  "vendored_path": "skills/apexlang",
+  "content_sha256": "413de83cf898dce3d3752469d9ebc5fbd57ebff6805e6224ad82420b74230494",
+  "license": "UPL-1.0"
+}
