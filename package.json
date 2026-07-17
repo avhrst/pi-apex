@@ -1,0 +1,64 @@
+{
+  "name": "pi-apexlang",
+  "version": "0.1.0",
+  "description": "APEXlang support for pi, powered by Oracle's public APEXlang skill.",
+  "type": "module",
+  "license": "UPL-1.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/avhrst/pi-apex.git"
+  },
+  "homepage": "https://github.com/avhrst/pi-apex#readme",
+  "bugs": {
+    "url": "https://github.com/avhrst/pi-apex/issues"
+  },
+  "keywords": [
+    "pi-package",
+    "pi",
+    "oracle",
+    "oracle-apex",
+    "apexlang",
+    "sqlcl",
+    "agent-skill"
+  ],
+  "files": [
+    "extensions",
+    "skills",
+    "LICENSE",
+    "README.md",
+    "THIRD_PARTY_NOTICES.md",
+    "UPSTREAM.json"
+  ],
+  "pi": {
+    "extensions": [
+      "./extensions/apexlang/index.ts"
+    ],
+    "skills": [
+      "./skills/apexlang"
+    ]
+  },
+  "scripts": {
+    "check": "npm run typecheck && npm run verify:vendor && npm test && npm run smoke && npm run verify:package",
+    "smoke": "node scripts/smoke.mjs",
+    "sync:oracle": "node scripts/sync-oracle-apexlang.mjs",
+    "test": "node --test",
+    "typecheck": "tsc --noEmit",
+    "verify:package": "node scripts/verify-package.mjs",
+    "verify:vendor": "node scripts/verify-vendor.mjs"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*",
+    "typebox": "*"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-ai": "^0.80.10",
+    "@earendil-works/pi-coding-agent": "^0.80.10",
+    "@types/node": "^24.12.0",
+    "typebox": "^1.1.38",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=22.19.0"
+  }
+}
