@@ -76,6 +76,11 @@ The registered `apexlang` tool supports:
 | `runtime_doctor` | Diagnoses runtime configuration. |
 | `runtime_validate` | Runs Oracle's live check gate, then offers an interactive check-only or same-session validate-and-import choice. |
 
+`local_validate` preserves Oracle's complete validator and report semantics.
+The extension accelerates its repeated block and nesting queries in a
+process-local cache; the vendored Oracle skill remains unchanged and no checks
+are skipped.
+
 The model cannot request import as a standalone action. Oracle's skill defaults
 to checking code; only after authoritative live validation passes does the
 extension offer a separate GUI choice. Selecting **Check and import APEXlang

@@ -21,6 +21,7 @@ export const APEXLANG_ACTIONS = Object.freeze([
 
 const apexctlPath = resolve(APEXLANG_SKILL_ROOT, "tools/apexctl.mjs");
 const queryValidPropsPath = resolve(APEXLANG_SKILL_ROOT, "tools/query-valid-props.mjs");
+const localValidatePath = resolve(moduleDirectory, "apexlang-local-validate.mjs");
 const runtimeRoundtripPath = resolve(moduleDirectory, "apexlang-runtime-roundtrip.mjs");
 const sqlclPtyProxyPath = resolve(moduleDirectory, "apexlang-sqlcl-pty.py");
 const CONTROL_CHARACTER_PATTERN = /[\u0000-\u001f\u007f]/;
@@ -214,9 +215,9 @@ export function buildApexlangCommand(input) {
   }
 
   if (action === "local_validate") {
-    const args = ["apexlang", "validate", "--app-path", requirePath(input, "app_path", action)];
+    const args = ["--app-path", requirePath(input, "app_path", action)];
     addFlag(args, "--fix-vocab", input.fix_vocab);
-    return apexctl(args);
+    return { scriptPath: localValidatePath, args, prelude: [] };
   }
 
   if (action === "compiler_truth_audit") {

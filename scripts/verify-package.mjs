@@ -26,6 +26,8 @@ try {
     "extensions/apexlang/ords-sqlcl-compatibility.json",
     "extensions/lib/apexlang-cli.d.mts",
     "extensions/lib/apexlang-cli.mjs",
+    "extensions/lib/apexlang-local-validate.mjs",
+    "extensions/lib/apexlang-local-validator.py",
     "extensions/lib/apexlang-runtime-roundtrip.mjs",
     "extensions/lib/apexlang-sqlcl-pty.py",
     "skills/apexlang/SKILL.md",

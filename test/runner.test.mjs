@@ -141,6 +141,17 @@ test("builds workspace probe arguments without shell interpolation", () => {
   ]);
 });
 
+test("routes local validation through the accelerated wrapper", () => {
+  const command = buildApexlangCommand({
+    action: "local_validate",
+    app_path: "applications/orders",
+    fix_vocab: true
+  });
+  assert.equal(command.scriptPath.endsWith("apexlang-local-validate.mjs"), true);
+  assert.deepEqual(command.args, ["--app-path", "applications/orders", "--fix-vocab"]);
+  assert.deepEqual(command.prelude, []);
+});
+
 test("rejects SQLcl control-language injection at the adapter boundary", () => {
   for (const dbConnectionName of ["safe\nhost touch /tmp/pwned", "user/password@db", "alias;exit"]) {
     assert.throws(
