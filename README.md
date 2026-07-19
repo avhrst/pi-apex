@@ -90,6 +90,19 @@ code** requires an explicit target mode:
 Without GUI support, the tool always stops after checking and reports import
 as a follow-up.
 
+When refreshing a full APEXlang export, run one SQLcl export with explicit
+replacement semantics:
+
+```text
+apex export -applicationid <id> -exptype APEXLANG -split -dir <absolute-parent-directory> -force
+```
+
+`-dir` names the parent directory; SQLcl creates the application-alias folder
+below it. The `-force` flag removes and recreates that export folder, so a
+repeat export produces one current snapshot instead of collision copies such
+as `application_1.apx` and `p00005_1.apx`. Because this replaces the complete
+local export, preserve or import any local-only work before refreshing it.
+
 All app paths must remain inside the active Pi workspace. The adapter rejects
 traversal, app-tree symlinks, and multiply linked files on mutating vocabulary
 fixes; verifies live workspace input against `deployments/default.json`; and
