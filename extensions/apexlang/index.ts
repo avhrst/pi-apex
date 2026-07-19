@@ -20,6 +20,8 @@ const CHECK_ONLY_CHOICE = "Check APEXlang code (recommended) — stop after the 
 const IMPORT_CHOICE = "Check and import APEXlang code — revalidate and import in one SQLcl session";
 const UPDATE_EXISTING_CHOICE = "Update an existing app — require one proven remote target";
 const CREATE_NEW_CHOICE = "Create a new app — require proof that the alias is absent";
+const EXPORT_OVERWRITE_GUIDELINE =
+  "For a full APEXlang export refresh, run exactly one SQLcl `apex export` command with `-force` and `-dir` set to the absolute parent directory. Never export without `-force` into an existing destination: SQLcl can collision-suffix every artifact as `*_1.apx` instead of replacing the snapshot.";
 
 function trimOutput(value: string, outputRoot?: string): string {
   if (value.length <= MAX_TOOL_OUTPUT) return value;
@@ -110,6 +112,7 @@ export function createApexlangTool(overrides: Partial<ApexlangDependencies> = {}
   promptGuidelines: [
     "Load the apexlang skill before using the apexlang tool and follow its routing and Missing Inputs rules.",
     "Use apexlang workspace_probe before app-scoped APEXlang work.",
+    EXPORT_OVERWRITE_GUIDELINE,
     "Use apexlang runtime_validate only after the user provides both db_connection_name and the matching APEX workspace_name; import requires the tool's separate post-check GUI choice."
   ],
   executionMode: "sequential",
@@ -425,6 +428,7 @@ export {
   CHECK_ONLY_CHOICE,
   IMPORT_CHOICE,
   CREATE_NEW_CHOICE,
+  EXPORT_OVERWRITE_GUIDELINE,
   UPDATE_EXISTING_CHOICE,
   actionWritesProject,
   confirmationMessage,

@@ -5,6 +5,7 @@ import { join } from "node:path";
 import test from "node:test";
 import {
   CREATE_NEW_CHOICE,
+  EXPORT_OVERWRITE_GUIDELINE,
   IMPORT_CHOICE,
   UPDATE_EXISTING_CHOICE,
   createApexlangTool,
@@ -56,6 +57,9 @@ test("registers and executes the pi-native APEXlang tool", async () => {
 
   assert.deepEqual(tools.map((tool) => tool.name), ["apexlang"]);
   assert.equal(tools[0].executionMode, "sequential");
+  assert.equal(tools[0].promptGuidelines.includes(EXPORT_OVERWRITE_GUIDELINE), true);
+  assert.match(EXPORT_OVERWRITE_GUIDELINE, /exactly one SQLcl `apex export` command with `-force`/);
+  assert.match(EXPORT_OVERWRITE_GUIDELINE, /\*_1\.apx/);
   assert.equal(handlers.has("session_shutdown"), true);
 
   const workspace = await mkdtemp(join(tmpdir(), "pi-apexlang-extension-test-"));
