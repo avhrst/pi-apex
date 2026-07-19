@@ -1,6 +1,6 @@
 {
   "name": "pi-apexlang",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "APEXlang support for pi, powered by Oracle's public APEXlang skill.",
   "type": "module",
   "license": "UPL-1.0",

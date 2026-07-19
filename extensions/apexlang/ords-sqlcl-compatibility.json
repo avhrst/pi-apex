@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "policy": "advisory-only",
+  "lastReviewed": "2026-07-19",
+  "massValidation": {
+    "minimumFindings": 50,
+    "minimumDistinctFilesForAppWideReports": 5
+  },
+  "caveat": "Oracle publishes minimum APEXlang prerequisites, not an ORDS-to-SQLcl patch certification matrix. Exact SQLcl builds in this table are diagnostic baselines and never validation gates.",
+  "rows": [
+    {
+      "environment": "ORDS before 26.1.1 or APEX before 26.1",
+      "matchMode": "any",
+      "ordsRange": "<26.1.1",
+      "apexRange": "<26.1",
+      "sqlclGuidance": "APEXlang is unsupported; upgrade the server components before changing SQLcl.",
+      "diagnosticSqlclBuild": "",
+      "diagnosticSqlclDownloadUrl": "",
+      "basis": "oracle-confirmed",
+      "sourceUrls": [
+        "https://www.oracle.com/tools/ords/ords-relnotes-26.1.1.html",
+        "https://docs.oracle.com/en/database/oracle/apex/26.1/htmrn/changed-behavior.html"
+      ]
+    },
+    {
+      "environment": "APEX 26.1.x with ORDS 26.1.1 through 26.1.x",
+      "matchMode": "all",
+      "ordsRange": ">=26.1.1 <26.2.0",
+      "apexRange": "26.1.x",
+      "sqlclGuidance": "Oracle minimum: SQLcl 26.1. Diagnostic baseline: 26.1.2.132.1334.",
+      "diagnosticSqlclBuild": "26.1.2.132.1334",
+      "diagnosticSqlclDownloadUrl": "https://download.oracle.com/otn_software/java/sqldeveloper/sqlcl-26.1.2.132.1334.zip",
+      "basis": "oracle-minimum-plus-extension-advisory",
+      "sourceUrls": [
+        "https://docs.oracle.com/en/database/oracle/sql-developer-command-line/26.1/sqcug/prerequisites-apexlang.html",
+        "https://www.oracle.com/tools/sqlcl/sqlcl-relnotes-26.1.2.html"
+      ]
+    },
+    {
+      "environment": "APEX 26.1.x with ORDS 26.2.x",
+      "matchMode": "all",
+      "ordsRange": ">=26.2.0 <26.3.0",
+      "apexRange": "26.1.x",
+      "sqlclGuidance": "Oracle does not mandate SQLcl 26.2. On mass findings, compare with diagnostic baseline 26.1.2.132.1334.",
+      "diagnosticSqlclBuild": "26.1.2.132.1334",
+      "diagnosticSqlclDownloadUrl": "https://download.oracle.com/otn_software/java/sqldeveloper/sqlcl-26.1.2.132.1334.zip",
+      "basis": "extension-advisory",
+      "sourceUrls": [
+        "https://docs.oracle.com/en/database/oracle/sql-developer-command-line/26.1/sqcug/prerequisites-apexlang.html",
+        "https://www.oracle.com/tools/sqlcl/sqlcl-downloads.html"
+      ]
+    },
+    {
+      "environment": "Other or newer APEX, MMD, or ORDS release lines",
+      "matchMode": "fallback",
+      "ordsRange": "other",
+      "apexRange": "other",
+      "sqlclGuidance": "Verify current Oracle release documentation and use SQLcl compiler metadata that supports the app mmdVersion.",
+      "diagnosticSqlclBuild": "",
+      "diagnosticSqlclDownloadUrl": "",
+      "basis": "verify-current-docs",
+      "sourceUrls": [
+        "https://docs.oracle.com/en/database/oracle/apex/26.1/apxdc/using-sqlcl-apexlang.html"
+      ]
+    }
+  ]
+}

@@ -21,7 +21,9 @@ try {
   for (const requiredPath of [
     "LICENSE",
     "README.md",
+    "extensions/apexlang/compatibility.ts",
     "extensions/apexlang/index.ts",
+    "extensions/apexlang/ords-sqlcl-compatibility.json",
     "extensions/lib/apexlang-cli.d.mts",
     "extensions/lib/apexlang-cli.mjs",
     "extensions/lib/apexlang-runtime-roundtrip.mjs",

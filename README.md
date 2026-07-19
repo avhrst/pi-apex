@@ -103,6 +103,45 @@ repeat export produces one current snapshot instead of collision copies such
 as `application_1.apx` and `p00005_1.apx`. Because this replaces the complete
 local export, preserve or import any local-only work before refreshing it.
 
+## SQLcl and ORDS compatibility advisory
+
+Oracle documents minimum APEXlang prerequisites, but does not publish an exact
+ORDS-to-SQLcl patch certification matrix. The extension therefore keeps this
+mapping advisory and records whether a row is Oracle-confirmed or an extension
+diagnostic recommendation:
+
+| Server environment | SQLcl guidance | Basis |
+| --- | --- | --- |
+| ORDS before 26.1.1 or APEX before 26.1 | APEXlang is unsupported; upgrade the server components first. | Oracle-confirmed |
+| APEX 26.1.x with ORDS 26.1.1 through 26.1.x | Oracle minimum: SQLcl 26.1. Diagnostic baseline: `26.1.2.132.1334`. | Oracle minimum plus extension advisory |
+| APEX 26.1.x with ORDS 26.2.x | Oracle does not mandate SQLcl 26.2. On mass findings, compare with `26.1.2.132.1334`. | Extension advisory |
+| Other or newer APEX, MMD, or ORDS lines | Verify current Oracle release documentation and use compiler metadata supporting the app `mmdVersion`. | Verify current docs |
+
+The complete machine-readable table, source URLs, thresholds, and the direct
+diagnostic-build download are in
+[`extensions/apexlang/ords-sqlcl-compatibility.json`](extensions/apexlang/ords-sqlcl-compatibility.json).
+The exact build is a known diagnostic baseline, not a universal pin, and SQLcl
+26.2 is not categorically blocked.
+
+When a validation result contains at least 50 structured findings, the
+extension appends the table and recommends checking:
+
+- local `sql -version`;
+- the app's `.apex/apexlang.json` `mmdVersion`;
+- the server APEX release and ORDS version with its administrator.
+
+For local and compiler-truth text reports, the mass-error signal additionally
+requires at least five distinct `.apx` files, which avoids treating one noisy
+file as an environment-wide mismatch. An explicitly unsupported MMD version
+also produces the compatibility advice. The advice never changes validation
+status, relaxes an import gate, or claims that the application is valid.
+
+[ORDS 26.1.1 introduced APEXlang support](https://www.oracle.com/tools/ords/ords-relnotes-26.1.1.html),
+[APEX 26.1 requires ORDS 26.1.1 or later](https://docs.oracle.com/en/database/oracle/apex/26.1/htmrn/changed-behavior.html),
+and Oracle's [SQLcl prerequisites](https://docs.oracle.com/en/database/oracle/sql-developer-command-line/26.1/sqcug/prerequisites-apexlang.html)
+set the SQLcl minimum at 26.1. SQLcl
+[26.1.2 added full APEXlang support](https://www.oracle.com/tools/sqlcl/sqlcl-relnotes-26.1.2.html).
+
 All app paths must remain inside the active Pi workspace. The adapter rejects
 traversal, app-tree symlinks, and multiply linked files on mutating vocabulary
 fixes; verifies live workspace input against `deployments/default.json`; and
@@ -116,8 +155,9 @@ Offline routing, templates, generation, and most local checks need Node.js
 
 Oracle documents these requirements for live APEXlang work:
 
-- Oracle APEX with APEXlang support, using the latest available 26.1 build.
-- SQLcl 26.1.2 or newer.
+- Oracle APEX 26.1 with APEXlang support.
+- ORDS 26.1.1 or newer.
+- SQLcl 26.1 or newer, selected with the compatibility advisory above.
 - Java 17 or Java 21 for SQLcl.
 - A saved SQLcl connection name and its corresponding APEX workspace name.
 - A local APEX app or authoritative schema, model, API, or table metadata.

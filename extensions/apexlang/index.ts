@@ -13,6 +13,18 @@ import {
   type ApexlangInput,
   type ApexlangRunResult
 } from "../lib/apexlang-cli.mjs";
+import {
+  MASS_VALIDATION_DISTINCT_FILE_THRESHOLD,
+  MASS_VALIDATION_FINDING_THRESHOLD,
+  ORDS_SQLCL_COMPATIBILITY,
+  ORDS_SQLCL_COMPATIBILITY_GUIDELINE,
+  ORDS_SQLCL_COMPATIBILITY_TABLE,
+  buildValidationCompatibilityAdvisory,
+  clearLocalValidationCompatibilityReports,
+  detectValidationCompatibilitySignal,
+  formatValidationCompatibilityAdvisory,
+  renderOrdsSqlclCompatibilityTable
+} from "./compatibility.ts";
 
 const MAX_TOOL_OUTPUT = 80_000;
 const COMMAND_TIMEOUT_MS = 10 * 60 * 1000;
@@ -77,14 +89,20 @@ function createNewTargetProved(result: ApexlangRunResult): boolean {
     payload?.failure_class === "create_new_confirmation_required";
 }
 
-function processOutput(result: ApexlangRunResult): string {
+function processOutput(result: ApexlangRunResult, compatibilityAdvisory = ""): string {
   const streams = result.ok ? [result.stdout, result.stderr] : [result.stderr, result.stdout];
-  return trimOutput(streams.filter(Boolean).join("\n").trim(), result.outputRoot);
+  const output = trimOutput(streams.filter(Boolean).join("\n").trim(), result.outputRoot);
+  return [output, compatibilityAdvisory].filter(Boolean).join("\n\n");
 }
 
-function failureOutput(result: ApexlangRunResult, fallback: string): string {
-  const output = processOutput(result) || fallback;
-  return `${output}\n\nAPEXlang reports: ${result.outputRoot}`;
+function failureOutput(
+  result: ApexlangRunResult,
+  fallback: string,
+  compatibilityAdvisory = ""
+): string {
+  const streams = result.ok ? [result.stdout, result.stderr] : [result.stderr, result.stdout];
+  const output = trimOutput(streams.filter(Boolean).join("\n").trim(), result.outputRoot) || fallback;
+  return `${[output, compatibilityAdvisory].filter(Boolean).join("\n\n")}\n\nAPEXlang reports: ${result.outputRoot}`;
 }
 
 type ApexlangDependencies = {
@@ -113,6 +131,7 @@ export function createApexlangTool(overrides: Partial<ApexlangDependencies> = {}
     "Load the apexlang skill before using the apexlang tool and follow its routing and Missing Inputs rules.",
     "Use apexlang workspace_probe before app-scoped APEXlang work.",
     EXPORT_OVERWRITE_GUIDELINE,
+    ORDS_SQLCL_COMPATIBILITY_GUIDELINE,
     "Use apexlang runtime_validate only after the user provides both db_connection_name and the matching APEX workspace_name; import requires the tool's separate post-check GUI choice."
   ],
   executionMode: "sequential",
@@ -194,11 +213,25 @@ export function createApexlangTool(overrides: Partial<ApexlangDependencies> = {}
       ...(signal ? { signal } : {}),
       timeoutMs: COMMAND_TIMEOUT_MS
     };
+    if (input.action === "local_validate") {
+      await clearLocalValidationCompatibilityReports(outputRoot);
+    }
     const result = await dependencies.run(input, runOptions);
-    const output = processOutput(result);
+    const compatibilityAdvisory = await buildValidationCompatibilityAdvisory(result);
+    if (compatibilityAdvisory) {
+      onUpdate?.({
+        content: [{ type: "text", text: compatibilityAdvisory }],
+        details: { action: input.action, compatibilityAdvisory: true }
+      });
+    }
+    const output = processOutput(result, compatibilityAdvisory);
     if (!result.ok) {
       throw new Error(
-        failureOutput(result, `APEXlang ${input.action} failed with exit code ${result.code}.`)
+        failureOutput(
+          result,
+          `APEXlang ${input.action} failed with exit code ${result.code}.`,
+          compatibilityAdvisory
+        )
       );
     }
 
@@ -207,7 +240,8 @@ export function createApexlangTool(overrides: Partial<ApexlangDependencies> = {}
         throw new Error(
           failureOutput(
             result,
-            "APEXlang runtime validation did not produce authoritative live pass evidence."
+            "APEXlang runtime validation did not produce authoritative live pass evidence.",
+            compatibilityAdvisory
           )
         );
       }
@@ -299,10 +333,12 @@ export function createApexlangTool(overrides: Partial<ApexlangDependencies> = {}
             expectedAppDigest
           });
           if (!createNewTargetProved(proofResult)) {
+            const proofCompatibilityAdvisory = await buildValidationCompatibilityAdvisory(proofResult);
             throw new Error(
               failureOutput(
                 proofResult,
-                "Oracle did not prove that the create-new target is absent from the selected workspace."
+                "Oracle did not prove that the create-new target is absent from the selected workspace.",
+                proofCompatibilityAdvisory
               )
             );
           }
@@ -343,12 +379,14 @@ export function createApexlangTool(overrides: Partial<ApexlangDependencies> = {}
           createNewConfirmed,
           expectedAppDigest
         });
-        const importOutput = processOutput(importResult);
+        const importCompatibilityAdvisory = await buildValidationCompatibilityAdvisory(importResult);
+        const importOutput = processOutput(importResult, importCompatibilityAdvisory);
         if (!liveImportPassed(importResult)) {
           throw new Error(
             failureOutput(
               importResult,
-              "APEXlang validate-and-import did not produce authoritative import pass evidence."
+              "APEXlang validate-and-import did not produce authoritative import pass evidence.",
+              importCompatibilityAdvisory
             )
           );
         }
@@ -429,11 +467,21 @@ export {
   IMPORT_CHOICE,
   CREATE_NEW_CHOICE,
   EXPORT_OVERWRITE_GUIDELINE,
+  MASS_VALIDATION_DISTINCT_FILE_THRESHOLD,
+  MASS_VALIDATION_FINDING_THRESHOLD,
+  ORDS_SQLCL_COMPATIBILITY,
+  ORDS_SQLCL_COMPATIBILITY_GUIDELINE,
+  ORDS_SQLCL_COMPATIBILITY_TABLE,
   UPDATE_EXISTING_CHOICE,
   actionWritesProject,
+  buildValidationCompatibilityAdvisory,
+  clearLocalValidationCompatibilityReports,
   confirmationMessage,
   createNewTargetProved,
+  detectValidationCompatibilitySignal,
+  formatValidationCompatibilityAdvisory,
   liveImportPassed,
-  liveValidationPassed
+  liveValidationPassed,
+  renderOrdsSqlclCompatibilityTable
 };
 export type { ApexlangAction };
