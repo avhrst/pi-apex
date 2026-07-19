@@ -157,7 +157,7 @@ export function createApexlangTool(overrides: Partial<ApexlangDependencies> = {}
     ),
     list: Type.Optional(Type.Boolean({ description: "List matching compiler component types." })),
     supporting_objects: Type.Optional(
-      Type.Boolean({ description: "Include supporting objects in runtime preflight/doctor." })
+      Type.Boolean({ description: "Include supporting objects in runtime preflight, validation, and import." })
     ),
     fix_vocab: Type.Optional(
       Type.Boolean({ description: "Apply local vocabulary fixes after interactive confirmation." })
@@ -250,6 +250,12 @@ export function createApexlangTool(overrides: Partial<ApexlangDependencies> = {}
         };
       }
       if (choice === IMPORT_CHOICE) {
+        const expectedAppDigest = String(result.appDigest ?? "").trim().toLowerCase();
+        if (!/^[a-f0-9]{64}$/.test(expectedAppDigest)) {
+          throw new Error(
+            "APEXlang live check did not produce a valid application snapshot digest; import is blocked until it is revalidated."
+          );
+        }
         const targetChoice = await ctx.ui.select("Choose the explicitly intended import target:", [
           UPDATE_EXISTING_CHOICE,
           CREATE_NEW_CHOICE
@@ -286,7 +292,9 @@ export function createApexlangTool(overrides: Partial<ApexlangDependencies> = {}
             ],
             details: { action: input.action, targetResolutionMode, provingTarget: true }
           });
-          const proofResult = await dependencies.runCreateNewProof(input, runOptions);
+          const proofResult = await dependencies.runCreateNewProof(input, runOptions, {
+            expectedAppDigest
+          });
           if (!createNewTargetProved(proofResult)) {
             throw new Error(
               failureOutput(
@@ -329,7 +337,8 @@ export function createApexlangTool(overrides: Partial<ApexlangDependencies> = {}
         });
         const importResult = await dependencies.runImport(input, runOptions, {
           targetResolutionMode,
-          createNewConfirmed
+          createNewConfirmed,
+          expectedAppDigest
         });
         const importOutput = processOutput(importResult);
         if (!liveImportPassed(importResult)) {

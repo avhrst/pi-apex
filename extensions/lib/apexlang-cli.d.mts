@@ -43,11 +43,21 @@ export interface ApexlangRunOptions {
 export interface ApexlangImportOptions {
   targetResolutionMode?: "update-existing" | "create-new";
   createNewConfirmed?: boolean;
+  expectedAppDigest?: string;
+}
+
+export interface ApexlangApprovedImportOptions extends ApexlangImportOptions {
+  expectedAppDigest: string;
+}
+
+export interface ApexlangCreateNewProofOptions {
+  expectedAppDigest: string;
 }
 
 export interface ProcessTreeOptions {
   cwd: string;
   env?: NodeJS.ProcessEnv;
+  input?: string;
   maxBuffer?: number;
   signal?: AbortSignal;
   timeoutMs?: number;
@@ -60,11 +70,43 @@ export interface ApexlangProcessResult {
   stderr: string;
 }
 
+export interface SqlclValidationImportOptions extends ProcessTreeOptions {
+  validateCommand: string;
+  importCommand: string;
+}
+
+export interface SqlclValidationImportResult extends ApexlangProcessResult {
+  validationAccepted: boolean;
+  validationEvidence: {
+    accepted: boolean;
+    reason: string;
+    warningCount?: number;
+    validationSuccessCount?: number;
+    outputSha256?: string;
+  };
+  ptyBacked: true;
+  ptyProcessGroupReady: boolean;
+  sessionReady: boolean;
+  validationSent: boolean;
+  importSent: boolean;
+  importCompleted: boolean;
+  hardFailureDetected: boolean;
+  orderedMergedOutput: true;
+  validationOutput: string;
+  importOutput: string;
+}
+
 export interface ApexlangRunResult extends ApexlangProcessResult {
   action: ApexlangAction;
   command: ApexlangCommand;
   outputRoot: string;
   preludeResults: ApexlangProcessResult[];
+  runtimeApp: {
+    appPath?: string;
+    staged: boolean;
+    workspaceSource?: "workspace.name" | "app.workspace.name" | "explicit_workspace_name";
+  };
+  appDigest?: string;
 }
 
 export const APEXLANG_SKILL_ROOT: string;
@@ -91,11 +133,79 @@ export function validateMaterializationPaths(options: {
   requested: string;
   suggested: string;
 }): Promise<string>;
+export function prepareRuntimeApp(
+  input: ApexlangInput,
+  cwd: string,
+  outputRoot: string,
+  options?: { forceStage?: boolean }
+): Promise<{
+  appPath?: string;
+  staged: boolean;
+  workspaceSource?: "workspace.name" | "app.workspace.name" | "explicit_workspace_name";
+}>;
+export function computeApexlangAppDigest(appPath: string): Promise<string>;
+export function classifyWarningOnlyRuntimePayload(
+  payload: Record<string, unknown>,
+  transcript: string,
+  expectedImportIntent?: "validate-only" | "validate-and-import"
+): {
+  accepted: boolean;
+  reason: string;
+  attemptLabel?: string;
+  warningCount?: number;
+  validationSuccessCount?: number;
+  attemptSha256?: string;
+};
+export function classifyWarningCompatibleSqlclValidation(output: string): {
+  accepted: boolean;
+  reason: string;
+  warningCount: number;
+  validationSuccessCount: number;
+  outputSha256?: string;
+};
+export function proveWarningOnlyProblemsAreDiagnostics(
+  payload: Record<string, any>,
+  result: Pick<ApexlangRunResult, "outputRoot">
+): Promise<{
+  accepted: boolean;
+  reason?: string;
+  problemCount?: number;
+  problemsPath?: string;
+  problemsSha256?: string;
+}>;
+export function validateUpdateExistingImportProof(
+  payload: Record<string, any>,
+  input: ApexlangInput,
+  stagedAppPath: string
+): {
+  canonicalId: number;
+  canonicalAlias: string;
+  sourceId: number;
+  sourceAlias: string;
+  workspaceId: string;
+  workspaceName: string;
+};
+export function buildWarningCompatibleImportCommands(options: {
+  appPath: string;
+  workspaceId: string;
+  canonicalId: number;
+}): { validateCommand: string; importCommand: string };
+export function runWarningCompatibleImport(
+  input: ApexlangInput,
+  result: ApexlangRunResult,
+  options: ApexlangRunOptions,
+  dependencies?: { sessionRunner?: typeof executeSqlclValidationThenImport }
+): Promise<ApexlangRunResult>;
 export function executeProcessTree(
   executable: string,
   args: string[],
   options: ProcessTreeOptions
 ): Promise<ApexlangProcessResult>;
+export function executeSqlclValidationThenImport(
+  executable: string,
+  args: string[],
+  options: SqlclValidationImportOptions
+): Promise<SqlclValidationImportResult>;
 export function runApexlang(
   input: ApexlangInput,
   options: ApexlangRunOptions
@@ -103,9 +213,10 @@ export function runApexlang(
 export function runApexlangImport(
   input: ApexlangInput,
   options: ApexlangRunOptions,
-  importOptions?: ApexlangImportOptions
+  importOptions: ApexlangApprovedImportOptions
 ): Promise<ApexlangRunResult>;
 export function runApexlangCreateNewProof(
   input: ApexlangInput,
-  options: ApexlangRunOptions
+  options: ApexlangRunOptions,
+  proofOptions: ApexlangCreateNewProofOptions
 ): Promise<ApexlangRunResult>;
