@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { access, mkdtemp, rm } from "node:fs/promises";
+import { access, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -7,25 +7,41 @@ import {
   CREATE_NEW_CHOICE,
   EXPORT_OVERWRITE_GUIDELINE,
   IMPORT_CHOICE,
+  MASS_VALIDATION_DISTINCT_FILE_THRESHOLD,
+  MASS_VALIDATION_FINDING_THRESHOLD,
+  ORDS_SQLCL_COMPATIBILITY,
+  ORDS_SQLCL_COMPATIBILITY_GUIDELINE,
+  ORDS_SQLCL_COMPATIBILITY_TABLE,
   UPDATE_EXISTING_CHOICE,
   createApexlangTool,
   createNewTargetProved,
+  detectValidationCompatibilitySignal,
+  formatValidationCompatibilityAdvisory,
   liveImportPassed,
   liveValidationPassed,
+  renderOrdsSqlclCompatibilityTable,
   default as apexlangExtension
 } from "../extensions/apexlang/index.ts";
 
 const TEST_APP_DIGEST = "a".repeat(64);
 
-function stubResult(payload, { ok = true, code = ok ? 0 : 1 } = {}) {
+function stubResult(
+  payload,
+  {
+    ok = true,
+    code = ok ? 0 : 1,
+    action = "runtime_validate",
+    outputRoot = "/tmp/pi-apexlang-test-reports"
+  } = {}
+) {
   return {
     ok,
     code,
     stdout: JSON.stringify(payload),
     stderr: "",
-    action: "runtime_validate",
+    action,
     command: { scriptPath: "apexctl", args: [], prelude: [] },
-    outputRoot: "/tmp/pi-apexlang-test-reports",
+    outputRoot,
     preludeResults: [],
     appDigest: TEST_APP_DIGEST
   };
@@ -102,6 +118,264 @@ test("registers and executes the pi-native APEXlang tool", async () => {
   } finally {
     await rm(workspace, { recursive: true, force: true });
   }
+});
+
+test("publishes a sourced advisory ORDS and SQLcl compatibility table", () => {
+  assert.equal(ORDS_SQLCL_COMPATIBILITY.schemaVersion, 1);
+  assert.equal(ORDS_SQLCL_COMPATIBILITY.policy, "advisory-only");
+  assert.equal(MASS_VALIDATION_FINDING_THRESHOLD, 50);
+  assert.equal(MASS_VALIDATION_DISTINCT_FILE_THRESHOLD, 5);
+  assert.equal(ORDS_SQLCL_COMPATIBILITY_TABLE.length, 4);
+  for (const row of ORDS_SQLCL_COMPATIBILITY_TABLE) {
+    assert.ok(row.environment);
+    assert.ok(["any", "all", "fallback"].includes(row.matchMode));
+    assert.ok(row.sqlclGuidance);
+    assert.ok(row.basis);
+    assert.ok(row.sourceUrls.length > 0);
+    for (const url of row.sourceUrls) assert.equal(new URL(url).protocol, "https:");
+    if (row.diagnosticSqlclDownloadUrl) {
+      assert.equal(new URL(row.diagnosticSqlclDownloadUrl).protocol, "https:");
+    }
+  }
+  assert.match(ORDS_SQLCL_COMPATIBILITY_GUIDELINE, /do not hard-block other SQLcl versions/);
+  const rendered = renderOrdsSqlclCompatibilityTable();
+  assert.match(rendered, /ORDS 26\.2\.x/);
+  assert.match(rendered, /26\.1\.2\.132\.1334/);
+  assert.match(rendered, /extension-advisory/);
+});
+
+test("detects the mass-validation boundary and normalized warning results", async () => {
+  const belowThreshold = await detectValidationCompatibilitySignal(
+    stubResult(
+      {
+        live_check_status: "fail",
+        validation_status: "fail",
+        problem_count: 49,
+        unresolved_count: 49
+      },
+      { ok: false }
+    )
+  );
+  assert.equal(belowThreshold, undefined);
+
+  const atThreshold = await detectValidationCompatibilitySignal(
+    stubResult(
+      {
+        live_check_status: "fail",
+        validation_status: "fail",
+        problem_count: 50,
+        unresolved_count: 50
+      },
+      { ok: false }
+    )
+  );
+  assert.deepEqual(atThreshold, { source: "structured-result", findingCount: 50 });
+
+  const normalizedWarnings = await detectValidationCompatibilitySignal(
+    stubResult({
+      ...livePassPayload,
+      problem_count: 0,
+      unresolved_count: 0,
+      compatibility_fallback: {
+        policy: "sqlcl_explicit_validation_success_with_compile_warnings",
+        original_unresolved_count: 142
+      }
+    })
+  );
+  assert.deepEqual(normalizedWarnings, { source: "structured-result", findingCount: 142 });
+  assert.match(
+    formatValidationCompatibilityAdvisory(normalizedWarnings),
+    /does not turn a failed validation into a pass/
+  );
+
+  const compilerTruthOutput = Array.from({ length: 50 }, (_, index) =>
+    ` - monitor/pages/p${String((index % 5) + 1).padStart(5, "0")}.apx:${index + 1}: COMPILER_TRUTH_PROP_UNKNOWN property${index} is not present in compiler metadata`
+  ).join("\n");
+  const compilerTruthSignal = await detectValidationCompatibilitySignal({
+    ...stubResult({}, { ok: false, action: "compiler_truth_audit" }),
+    stdout: compilerTruthOutput
+  });
+  assert.deepEqual(compilerTruthSignal, {
+    source: "compiler-truth-output",
+    findingCount: 50,
+    distinctFileCount: 5
+  });
+});
+
+test("detects mass local reports without double-counting duplicates", async () => {
+  const outputRoot = await mkdtemp(join(tmpdir(), "pi-apexlang-compatibility-test-"));
+  const logs = join(outputRoot, "logs");
+  await mkdir(logs);
+  try {
+    const issues = Array.from({ length: 50 }, (_, index) => ({
+      file: `monitor/pages/p${String((index % 5) + 1).padStart(5, "0")}.apx`,
+      line: index + 1,
+      rule: "COMPILER_TRUTH_PROP_UNKNOWN",
+      message: `property ${index} is not present in compiler metadata`
+    }));
+    await writeFile(
+      join(logs, "apexlang-dsl-report.json"),
+      JSON.stringify({ status: "fail", issues })
+    );
+    const massSignal = await detectValidationCompatibilitySignal(
+      stubResult({}, { ok: false, action: "local_validate", outputRoot })
+    );
+    assert.deepEqual(massSignal, {
+      source: "local-reports",
+      findingCount: 50,
+      distinctFileCount: 5
+    });
+
+    const duplicatedIssues = issues.slice(0, 25);
+    await Promise.all([
+      writeFile(
+        join(logs, "apexlang-dsl-report.json"),
+        JSON.stringify({ status: "fail", issues: duplicatedIssues })
+      ),
+      writeFile(
+        join(logs, "apexlang-validations-report.json"),
+        JSON.stringify({ status: "fail", issues: duplicatedIssues })
+      )
+    ]);
+    assert.equal(
+      await detectValidationCompatibilitySignal(
+        stubResult({}, { ok: false, action: "local_validate", outputRoot })
+      ),
+      undefined
+    );
+
+    await writeFile(
+      join(logs, "apexlang-vocab-report.json"),
+      JSON.stringify({ blocking_reason: "UNSUPPORTED_MMD_VERSION", unresolved: [] })
+    );
+    assert.deepEqual(
+      await detectValidationCompatibilitySignal(
+        stubResult({}, { ok: false, action: "local_validate", outputRoot })
+      ),
+      { source: "unsupported-mmd" }
+    );
+  } finally {
+    await rm(outputRoot, { recursive: true, force: true });
+  }
+});
+
+test("clears stale local reports before a new validation run", async () => {
+  const outputRoot = await mkdtemp(join(tmpdir(), "pi-apexlang-stale-report-test-"));
+  const logs = join(outputRoot, "logs");
+  const staleReport = join(logs, "apexlang-dsl-report.json");
+  await mkdir(logs);
+  await writeFile(
+    staleReport,
+    JSON.stringify({
+      status: "fail",
+      issues: Array.from({ length: 50 }, (_, index) => ({
+        file: `monitor/pages/p${String((index % 5) + 1).padStart(5, "0")}.apx`,
+        line: index + 1,
+        rule: "COMPILER_TRUTH_PROP_UNKNOWN",
+        message: `stale property ${index}`
+      }))
+    })
+  );
+  try {
+    const tool = createApexlangTool({
+      async run() {
+        await assert.rejects(access(staleReport));
+        return stubResult(
+          { error: "validation stopped before reports were written" },
+          { ok: false, action: "local_validate", outputRoot }
+        );
+      },
+      async outputRoot() {
+        return outputRoot;
+      }
+    });
+    await assert.rejects(
+      tool.execute(
+        "fresh-local-validation",
+        { action: "local_validate", app_path: "monitor" },
+        new AbortController().signal,
+        undefined,
+        { cwd: "/tmp/pi-apexlang-workspace", hasUI: false, ui: {} }
+      ),
+      (error) => {
+        assert.doesNotMatch(error.message, /SQLcl\/ORDS compatibility advisory/);
+        return true;
+      }
+    );
+  } finally {
+    await rm(outputRoot, { recursive: true, force: true });
+  }
+});
+
+test("adds the compatibility advisory to mass runtime validation output", async () => {
+  const updates = [];
+  const tool = createApexlangTool({
+    async run() {
+      return stubResult({
+        ...livePassPayload,
+        compatibility_fallback: {
+          policy: "sqlcl_explicit_validation_success_with_compile_warnings",
+          original_unresolved_count: 142
+        }
+      });
+    },
+    async outputRoot() {
+      return "/tmp/pi-apexlang-test-reports";
+    }
+  });
+  const result = await tool.execute(
+    "mass-runtime-check",
+    {
+      action: "runtime_validate",
+      app_path: "monitor",
+      db_connection_name: "apex_dev",
+      workspace_name: "APEX_DEV"
+    },
+    new AbortController().signal,
+    (update) => updates.push(update),
+    { cwd: "/tmp/pi-apexlang-workspace", hasUI: false, ui: {} }
+  );
+  assert.match(result.content[0].text, /SQLcl\/ORDS compatibility advisory/);
+  assert.match(result.content[0].text, /26\.1\.2\.132\.1334/);
+  assert.match(result.content[0].text, /Import was not run/);
+  assert.equal(updates.some((update) => update.details.compatibilityAdvisory === true), true);
+
+  const failingTool = createApexlangTool({
+    async run() {
+      return stubResult(
+        {
+          live_check_status: "fail",
+          validation_status: "fail",
+          problem_count: 50,
+          unresolved_count: 50
+        },
+        { ok: false }
+      );
+    },
+    async outputRoot() {
+      return "/tmp/pi-apexlang-test-reports";
+    }
+  });
+  await assert.rejects(
+    failingTool.execute(
+      "mass-runtime-failure",
+      {
+        action: "runtime_validate",
+        app_path: "monitor",
+        db_connection_name: "apex_dev",
+        workspace_name: "APEX_DEV"
+      },
+      new AbortController().signal,
+      undefined,
+      { cwd: "/tmp/pi-apexlang-workspace", hasUI: false, ui: {} }
+    ),
+    (error) => {
+      assert.match(error.message, /SQLcl\/ORDS compatibility advisory/);
+      assert.match(error.message, /This advice does not turn a failed validation into a pass/);
+      assert.match(error.message, /APEXlang reports:/);
+      return true;
+    }
+  );
 });
 
 test("requires authoritative payload evidence before post-check import handling", () => {
