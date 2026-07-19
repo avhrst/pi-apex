@@ -1,6 +1,6 @@
 {
   "name": "pi-apexlang",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "APEXlang support for pi, powered by Oracle's public APEXlang skill.",
   "type": "module",
   "license": "UPL-1.0",
@@ -24,6 +24,10 @@
   "files": [
     "extensions",
     "skills",
+    "!extensions/**/__pycache__/**",
+    "!extensions/**/*.py[cod]",
+    "!skills/**/__pycache__/**",
+    "!skills/**/*.py[cod]",
     "LICENSE",
     "README.md",
     "THIRD_PARTY_NOTICES.md",

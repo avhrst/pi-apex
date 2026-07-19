@@ -14,6 +14,8 @@ import {
   default as apexlangExtension
 } from "../extensions/apexlang/index.ts";
 
+const TEST_APP_DIGEST = "a".repeat(64);
+
 function stubResult(payload, { ok = true, code = ok ? 0 : 1 } = {}) {
   return {
     ok,
@@ -23,7 +25,8 @@ function stubResult(payload, { ok = true, code = ok ? 0 : 1 } = {}) {
     action: "runtime_validate",
     command: { scriptPath: "apexctl", args: [], prelude: [] },
     outputRoot: "/tmp/pi-apexlang-test-reports",
-    preludeResults: []
+    preludeResults: [],
+    appDigest: TEST_APP_DIGEST
   };
 }
 
@@ -194,7 +197,11 @@ test("post-check import explicitly targets an existing application", async () =>
   assert.equal(result.details.imported, true);
   assert.equal(result.details.targetResolutionMode, "update-existing");
   assert.deepEqual(importCalls, [
-    { targetResolutionMode: "update-existing", createNewConfirmed: false }
+    {
+      targetResolutionMode: "update-existing",
+      createNewConfirmed: false,
+      expectedAppDigest: TEST_APP_DIGEST
+    }
   ]);
   assert.match(result.content[0].text, /^Import completed: validate_status=pass/);
 });
@@ -206,8 +213,8 @@ test("create-new import requires Oracle absence proof before confirmation", asyn
       events.push("live-check");
       return stubResult(livePassPayload);
     },
-    async runCreateNewProof() {
-      events.push("absence-proof");
+    async runCreateNewProof(_input, _options, proofOptions) {
+      events.push(`absence-proof:${proofOptions.expectedAppDigest}`);
       return stubResult(
         {
           target_resolution_mode: "create-new",
@@ -220,7 +227,9 @@ test("create-new import requires Oracle absence proof before confirmation", asyn
       );
     },
     async runImport(_input, _options, importOptions) {
-      events.push(`import:${importOptions.targetResolutionMode}:${importOptions.createNewConfirmed}`);
+      events.push(
+        `import:${importOptions.targetResolutionMode}:${importOptions.createNewConfirmed}:${importOptions.expectedAppDigest}`
+      );
       return stubResult(importPassPayload);
     },
     async outputRoot() {
@@ -254,9 +263,9 @@ test("create-new import requires Oracle absence proof before confirmation", asyn
   );
   assert.deepEqual(events, [
     "live-check",
-    "absence-proof",
+    `absence-proof:${TEST_APP_DIGEST}`,
     "confirm-after-proof",
-    "import:create-new:true"
+    `import:create-new:true:${TEST_APP_DIGEST}`
   ]);
   assert.equal(result.details.imported, true);
   assert.equal(result.details.targetResolutionMode, "create-new");
