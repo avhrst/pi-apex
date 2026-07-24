@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import {
+  CHECK_ONLY_CHOICE,
   CREATE_NEW_CHOICE,
   EXPORT_OVERWRITE_GUIDELINE,
   IMPORT_CHOICE,
@@ -12,6 +13,7 @@ import {
   ORDS_SQLCL_COMPATIBILITY,
   ORDS_SQLCL_COMPATIBILITY_GUIDELINE,
   ORDS_SQLCL_COMPATIBILITY_TABLE,
+  RPC_DIALOG_TIMEOUT_MS,
   UPDATE_EXISTING_CHOICE,
   createApexlangTool,
   createNewTargetProved,
@@ -432,6 +434,51 @@ test("requires authoritative payload evidence before post-check import handling"
     ),
     true
   );
+});
+
+test("post-check RPC dialog is abort-aware, bounded, and fail-closed", async () => {
+  const tool = createApexlangTool({
+    async run() {
+      return stubResult(livePassPayload);
+    },
+    async outputRoot() {
+      return "/tmp/pi-apexlang-test-reports";
+    }
+  });
+  const controller = new AbortController();
+  const dialogCalls = [];
+  const result = await tool.execute(
+    "bounded-post-check",
+    {
+      action: "runtime_validate",
+      app_path: "applications/orders",
+      db_connection_name: "apex_dev",
+      workspace_name: "ORDERS_DEV"
+    },
+    controller.signal,
+    undefined,
+    {
+      cwd: "/tmp/pi-apexlang-workspace",
+      mode: "rpc",
+      hasUI: true,
+      ui: {
+        async select(title, options, dialogOptions) {
+          dialogCalls.push({ title, options, dialogOptions });
+          return undefined;
+        }
+      }
+    }
+  );
+
+  assert.equal(result.details.liveValidationPassed, true);
+  assert.equal(result.details.imported, false);
+  assert.equal(result.details.postCheckChoice, "cancelled");
+  assert.match(result.content[0].text, /Live validation passed/);
+  assert.match(result.content[0].text, /choice was cancelled; import was not run/);
+  assert.equal(dialogCalls.length, 1);
+  assert.deepEqual(dialogCalls[0].options, [CHECK_ONLY_CHOICE, IMPORT_CHOICE]);
+  assert.equal(dialogCalls[0].dialogOptions.timeout, RPC_DIALOG_TIMEOUT_MS);
+  assert.equal(dialogCalls[0].dialogOptions.signal, controller.signal);
 });
 
 test("post-check import explicitly targets an existing application", async () => {

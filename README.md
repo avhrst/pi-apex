@@ -92,8 +92,10 @@ code** requires an explicit target mode:
   Only after it proves the alias is absent does Pi ask for a second
   confirmation and rerun validation plus import together.
 
-Without GUI support, the tool always stops after checking and reports import
-as a follow-up.
+Every post-validation choice is abort-aware and bounded to five minutes.
+Without a confirmed GUI response—or when the request is aborted or times
+out—the tool stops after checking and reports import as a follow-up. Silence is
+never treated as import authorization.
 
 When refreshing a full APEXlang export, run one SQLcl export with explicit
 replacement semantics:

@@ -28,6 +28,7 @@ import {
 
 const MAX_TOOL_OUTPUT = 80_000;
 const COMMAND_TIMEOUT_MS = 10 * 60 * 1000;
+const RPC_DIALOG_TIMEOUT_MS = 5 * 60 * 1000;
 const CHECK_ONLY_CHOICE = "Check APEXlang code (recommended) — stop after the successful live check";
 const IMPORT_CHOICE = "Check and import APEXlang code — revalidate and import in one SQLcl session";
 const UPDATE_EXISTING_CHOICE = "Update an existing app — require one proven remote target";
@@ -192,7 +193,11 @@ export function createApexlangTool(overrides: Partial<ApexlangDependencies> = {}
       if (!ctx.hasUI) {
         throw new Error("This APEXlang action changes project files and requires interactive confirmation.");
       }
-      const confirmed = await ctx.ui.confirm("Confirm APEXlang project change", confirmationMessage(input));
+      const confirmed = await ctx.ui.confirm(
+        "Confirm APEXlang project change",
+        confirmationMessage(input),
+        { ...(signal ? { signal } : {}), timeout: RPC_DIALOG_TIMEOUT_MS }
+      );
       if (!confirmed) {
         return {
           content: [{ type: "text", text: "APEXlang project change cancelled." }],
@@ -264,10 +269,11 @@ export function createApexlangTool(overrides: Partial<ApexlangDependencies> = {}
         };
       }
 
-      const choice = await ctx.ui.select("APEXlang live check passed. Choose the next step:", [
-        CHECK_ONLY_CHOICE,
-        IMPORT_CHOICE
-      ]);
+      const choice = await ctx.ui.select(
+        "APEXlang live check passed. Choose the next step:",
+        [CHECK_ONLY_CHOICE, IMPORT_CHOICE],
+        { ...(signal ? { signal } : {}), timeout: RPC_DIALOG_TIMEOUT_MS }
+      );
       if (choice !== CHECK_ONLY_CHOICE && choice !== IMPORT_CHOICE) {
         return {
           content: [
@@ -293,10 +299,11 @@ export function createApexlangTool(overrides: Partial<ApexlangDependencies> = {}
             "APEXlang live check did not produce a valid application snapshot digest; import is blocked until it is revalidated."
           );
         }
-        const targetChoice = await ctx.ui.select("Choose the explicitly intended import target:", [
-          UPDATE_EXISTING_CHOICE,
-          CREATE_NEW_CHOICE
-        ]);
+        const targetChoice = await ctx.ui.select(
+          "Choose the explicitly intended import target:",
+          [UPDATE_EXISTING_CHOICE, CREATE_NEW_CHOICE],
+          { ...(signal ? { signal } : {}), timeout: RPC_DIALOG_TIMEOUT_MS }
+        );
         if (targetChoice !== UPDATE_EXISTING_CHOICE && targetChoice !== CREATE_NEW_CHOICE) {
           return {
             content: [
@@ -349,7 +356,8 @@ export function createApexlangTool(overrides: Partial<ApexlangDependencies> = {}
           );
           createNewConfirmed = await ctx.ui.confirm(
             "Confirm new APEX application",
-            `Oracle proved that ${provenAlias} is absent from ${provenWorkspace}. Create it by rerunning validation and import together?`
+            `Oracle proved that ${provenAlias} is absent from ${provenWorkspace}. Create it by rerunning validation and import together?`,
+            { ...(signal ? { signal } : {}), timeout: RPC_DIALOG_TIMEOUT_MS }
           );
           if (!createNewConfirmed) {
             return {
@@ -472,6 +480,7 @@ export {
   ORDS_SQLCL_COMPATIBILITY,
   ORDS_SQLCL_COMPATIBILITY_GUIDELINE,
   ORDS_SQLCL_COMPATIBILITY_TABLE,
+  RPC_DIALOG_TIMEOUT_MS,
   UPDATE_EXISTING_CHOICE,
   actionWritesProject,
   buildValidationCompatibilityAdvisory,
