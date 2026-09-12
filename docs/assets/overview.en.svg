@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" xml:lang="en" width="1440" height="1490" viewBox="0 0 1440 1490" role="img" aria-labelledby="title desc">
+<title id="title">pi-apexlang — From app files to verified import</title>
+<desc id="desc">Two complementary components: the unchanged Oracle skill and the Pi extension. Discover context, check files locally and against compiler metadata, then validate live. Import requires an explicit choice and target proof; otherwise finish without import.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#7d989f"/></marker></defs>
+<style>text{font-family:Arial,"DejaVu Sans",sans-serif}.mono{font-family:"DejaVu Sans Mono",monospace}.eyebrow{letter-spacing:2px}</style>
+<rect x="0" y="0" width="1440" height="1490" rx="0" fill="#f4f6f2" stroke="none"/>
+<rect x="0" y="0" width="1440" height="204" rx="0" fill="#123642" stroke="none"/>
+<rect x="64" y="36" width="7" height="28" rx="2" fill="#91dbc0" stroke="none"/>
+<text x="88" y="58" font-size="22" fill="#91dbc0" font-weight="700" class="eyebrow">PI / APEXLANG</text>
+<text x="64" y="118" font-size="46" fill="#ffffff" font-weight="700">From app files to verified import</text>
+<text x="64" y="163" font-size="26" fill="#d0e2e3" font-weight="400">Oracle APEXlang development inside pi</text>
+<text x="64" y="247" font-size="16" fill="#526c73" font-weight="700" class="eyebrow">TWO COMPLEMENTARY PARTS</text>
+<rect x="64" y="269" width="640" height="122" rx="16" fill="#ffffff" stroke="#d6e2db"/>
+<rect x="736" y="269" width="640" height="122" rx="16" fill="#ffffff" stroke="#d6e2db"/>
+<text x="88" y="307" font-size="28" fill="#183b47" font-weight="700">Oracle skill</text>
+<text x="88" y="340" font-size="21" fill="#183b47" font-weight="400">References · templates · bundled runtime</text>
+<text x="88" y="371" font-size="20" fill="#526c73" font-weight="400">Pinned snapshot, preserved unchanged</text>
+<text x="760" y="307" font-size="28" fill="#183b47" font-weight="700">Pi extension</text>
+<text x="760" y="340" font-size="21" fill="#183b47" font-weight="400">Tool actions · process adapter · confirmations</text>
+<text x="760" y="371" font-size="20" fill="#526c73" font-weight="400">Works inside the active project workspace</text>
+<text x="64" y="435" font-size="16" fill="#526c73" font-weight="700" class="eyebrow">RECOMMENDED WORKFLOW</text>
+<text x="1170" y="435" font-size="20" fill="#146d5d" font-weight="700">8 tool actions</text>
+<rect x="64" y="461" width="758" height="110" rx="16" fill="#ffffff" stroke="#d6e2db"/>
+<rect x="84" y="479" width="44" height="44" rx="12" fill="#dcefe9" stroke="none"/>
+<text x="97" y="509" font-size="24" fill="#146d5d" font-weight="700">1</text>
+<text x="147" y="494" font-size="26" fill="#183b47" font-weight="700">Establish project context</text>
+<text x="147" y="522" font-size="20" fill="#146d5d" font-weight="500" class="mono">workspace_probe</text>
+<text x="147" y="551" font-size="20" fill="#526c73" font-weight="400">Existing app or authoritative metadata</text>
+<rect x="850" y="461" width="526" height="110" rx="16" fill="#e8eee8" stroke="#cad7cc"/>
+<text x="873" y="494" font-size="23" fill="#183b47" font-weight="700">Optional: create a local scaffold</text>
+<text x="873" y="522" font-size="20" fill="#146d5d" font-weight="500" class="mono">new_app_materialize</text>
+<text x="873" y="551" font-size="19" fill="#526c73" font-weight="400">Exact suggested path + confirmation</text>
+<path d="M 107 571 L 107 594" stroke="#7d989f" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<rect x="64" y="604" width="1312" height="143" rx="16" fill="#ffffff" stroke="#d6e2db"/>
+<rect x="84" y="621" width="44" height="44" rx="12" fill="#dcefe9" stroke="none"/>
+<text x="97" y="651" font-size="24" fill="#146d5d" font-weight="700">2</text>
+<text x="147" y="651" font-size="27" fill="#183b47" font-weight="700">Check locally and against compiler metadata</text>
+<rect x="147" y="670" width="364" height="39" rx="8" fill="#edf4f4" stroke="none"/>
+<text x="163" y="696" font-size="20" fill="#183b47" font-weight="500" class="mono">query_valid_props</text>
+<rect x="531" y="670" width="364" height="39" rx="8" fill="#edf4f4" stroke="none"/>
+<text x="547" y="696" font-size="20" fill="#183b47" font-weight="500" class="mono">local_validate</text>
+<rect x="915" y="670" width="434" height="39" rx="8" fill="#edf4f4" stroke="none"/>
+<text x="931" y="696" font-size="20" fill="#183b47" font-weight="500" class="mono">compiler_truth_audit</text>
+<text x="147" y="732" font-size="20" fill="#526c73" font-weight="400">Local success does not establish a live server pass.</text>
+<path d="M 107 747 L 107 771" stroke="#7d989f" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<rect x="64" y="781" width="1312" height="143" rx="16" fill="#ffffff" stroke="#d6e2db"/>
+<rect x="84" y="798" width="44" height="44" rx="12" fill="#dcefe9" stroke="none"/>
+<text x="97" y="828" font-size="24" fill="#146d5d" font-weight="700">3</text>
+<text x="147" y="828" font-size="27" fill="#183b47" font-weight="700">Check the runtime, then validate live</text>
+<rect x="147" y="847" width="364" height="39" rx="8" fill="#edf4f4" stroke="none"/>
+<text x="163" y="873" font-size="20" fill="#183b47" font-weight="500" class="mono">runtime_preflight</text>
+<rect x="531" y="847" width="364" height="39" rx="8" fill="#edf4f4" stroke="none"/>
+<text x="547" y="873" font-size="20" fill="#183b47" font-weight="500" class="mono">runtime_doctor</text>
+<rect x="915" y="847" width="434" height="39" rx="8" fill="#e1eee4" stroke="none"/>
+<text x="931" y="873" font-size="20" fill="#183b47" font-weight="500" class="mono">runtime_validate</text>
+<text x="147" y="909" font-size="20" fill="#526c73" font-weight="400">Saved SQLcl connection + matching APEX workspace</text>
+<path d="M 720 924 L 720 947" stroke="#7d989f" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<rect x="64" y="957" width="1312" height="73" rx="16" fill="#fbefcf" stroke="#e4ce95"/>
+<text x="88" y="988" font-size="27" fill="#725017" font-weight="700">Authoritative live pass → interactive choice</text>
+<text x="88" y="1016" font-size="20" fill="#725017" font-weight="400">A failed check returns to diagnosis and repair.</text>
+<path d="M 250 1030 L 250 1054" stroke="#7d989f" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 905 1030 L 905 1054" stroke="#7d989f" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<rect x="64" y="1065" width="384" height="284" rx="16" fill="#e8efeb" stroke="#c8d9cd"/>
+<text x="88" y="1104" font-size="25" fill="#183b47" font-weight="700">Finish after checking</text>
+<text x="88" y="1147" font-size="19" fill="#183b47" font-weight="400">Choose “Check APEXlang code”</text>
+<path d="M 88 1170 L 424 1170" stroke="#c3d4ca" stroke-width="2" fill="none"/>
+<text x="88" y="1202" font-size="18" fill="#526c73" font-weight="400">No UI, cancellation, or timeout</text>
+<text x="88" y="1230" font-size="18" fill="#526c73" font-weight="400">also means no import.</text>
+<text x="88" y="1315" font-size="23" fill="#146d5d" font-weight="700" class="mono">imported = false</text>
+<rect x="476" y="1065" width="900" height="284" rx="16" fill="#ffffff" stroke="#b5d5c8"/>
+<text x="500" y="1104" font-size="26" fill="#183b47" font-weight="700">Choose import and an explicit target</text>
+<rect x="500" y="1125" width="393" height="103" rx="10" fill="#f0f5ef" stroke="none"/>
+<rect x="913" y="1125" width="439" height="103" rx="10" fill="#f0f5ef" stroke="none"/>
+<text x="518" y="1155" font-size="17" fill="#146d5d" font-weight="700">UPDATE EXISTING</text>
+<text x="518" y="1184" font-size="21" fill="#183b47" font-weight="400">Prove one existing</text>
+<text x="518" y="1211" font-size="21" fill="#183b47" font-weight="400">remote application.</text>
+<text x="931" y="1155" font-size="17" fill="#146d5d" font-weight="700">CREATE NEW</text>
+<text x="931" y="1184" font-size="21" fill="#183b47" font-weight="400">Prove alias is absent,</text>
+<text x="931" y="1211" font-size="21" fill="#183b47" font-weight="400">then confirm creation again.</text>
+<rect x="500" y="1244" width="852" height="81" rx="10" fill="#146d5d" stroke="none"/>
+<text x="518" y="1276" font-size="25" fill="#ffffff" font-weight="700">Same app digest → revalidate + import</text>
+<text x="518" y="1306" font-size="20" fill="#e1f3e9" font-weight="400">One SQLcl session · validation, import, runtime gate = pass</text>
+<path d="M 64 1380 L 1376 1380" stroke="#c7d6ce" stroke-width="2" fill="none"/>
+<text x="64" y="1417" font-size="22" fill="#183b47" font-weight="700">5 min per dialog</text>
+<text x="366" y="1417" font-size="22" fill="#183b47" font-weight="700">10 min per process</text>
+<text x="735" y="1417" font-size="22" fill="#183b47" font-weight="700">Save reports before session shutdown</text>
+<text x="64" y="1458" font-size="17" fill="#526c73" font-weight="400">Independent integration · Package 0.3.0 · Source d7bfb59 · 2026-09-12</text>
+<text x="1000" y="1458" font-size="16" fill="#526c73" font-weight="400">Documentation: docs/en/README.md</text>
+</svg>

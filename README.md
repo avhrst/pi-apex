@@ -11,6 +11,12 @@ APEXlang. It combines two resources:
 
 This is an independent integration and is not an Oracle product.
 
+## Documentation · Документація
+
+- [English documentation](docs/en/README.md): setup, architecture, tool reference, and maintenance.
+- [Українська документація](docs/uk/README.md): початок роботи, архітектура, довідник інструмента та супровід.
+- Infographics / Інфографіка: [English](docs/assets/overview.en.svg) · [Українська](docs/assets/overview.uk.svg).
+
 ## Install
 
 Try the local checkout without installing it:

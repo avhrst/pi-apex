@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" xml:lang="uk" width="1440" height="1490" viewBox="0 0 1440 1490" role="img" aria-labelledby="title desc">
+<title id="title">pi-apexlang — Від файлів до перевіреного імпорту</title>
+<desc id="desc">Дві складові: незмінений Oracle skill і розширення Pi. Визначте контекст, перевірте файли локально та за метаданими компілятора, потім на сервері. Імпорт потребує явного вибору й доказу цілі; інакше робота завершується без імпорту.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#7d989f"/></marker></defs>
+<style>text{font-family:Arial,"DejaVu Sans",sans-serif}.mono{font-family:"DejaVu Sans Mono",monospace}.eyebrow{letter-spacing:2px}</style>
+<rect x="0" y="0" width="1440" height="1490" rx="0" fill="#f4f6f2" stroke="none"/>
+<rect x="0" y="0" width="1440" height="204" rx="0" fill="#123642" stroke="none"/>
+<rect x="64" y="36" width="7" height="28" rx="2" fill="#91dbc0" stroke="none"/>
+<text x="88" y="58" font-size="22" fill="#91dbc0" font-weight="700" class="eyebrow">PI / APEXLANG</text>
+<text x="64" y="118" font-size="46" fill="#ffffff" font-weight="700">Від файлів до перевіреного імпорту</text>
+<text x="64" y="163" font-size="26" fill="#d0e2e3" font-weight="400">Розробка Oracle APEXlang у pi</text>
+<text x="64" y="247" font-size="16" fill="#526c73" font-weight="700" class="eyebrow">ДВІ СКЛАДОВІ</text>
+<rect x="64" y="269" width="640" height="122" rx="16" fill="#ffffff" stroke="#d6e2db"/>
+<rect x="736" y="269" width="640" height="122" rx="16" fill="#ffffff" stroke="#d6e2db"/>
+<text x="88" y="307" font-size="28" fill="#183b47" font-weight="700">Oracle skill</text>
+<text x="88" y="340" font-size="21" fill="#183b47" font-weight="400">Довідники · шаблони · вбудоване середовище</text>
+<text x="88" y="371" font-size="20" fill="#526c73" font-weight="400">Зафіксований знімок без змін</text>
+<text x="760" y="307" font-size="28" fill="#183b47" font-weight="700">Розширення Pi</text>
+<text x="760" y="340" font-size="21" fill="#183b47" font-weight="400">Дії інструмента · адаптер · підтвердження</text>
+<text x="760" y="371" font-size="20" fill="#526c73" font-weight="400">Працює в активному каталозі проєкту</text>
+<text x="64" y="435" font-size="16" fill="#526c73" font-weight="700" class="eyebrow">РЕКОМЕНДОВАНИЙ ПОРЯДОК РОБОТИ</text>
+<text x="1170" y="435" font-size="20" fill="#146d5d" font-weight="700">8 дій інструмента</text>
+<rect x="64" y="461" width="758" height="110" rx="16" fill="#ffffff" stroke="#d6e2db"/>
+<rect x="84" y="479" width="44" height="44" rx="12" fill="#dcefe9" stroke="none"/>
+<text x="97" y="509" font-size="24" fill="#146d5d" font-weight="700">1</text>
+<text x="147" y="494" font-size="26" fill="#183b47" font-weight="700">Визначити контекст проєкту</text>
+<text x="147" y="522" font-size="20" fill="#146d5d" font-weight="500" class="mono">workspace_probe</text>
+<text x="147" y="551" font-size="20" fill="#526c73" font-weight="400">Наявний застосунок або достовірні метадані</text>
+<rect x="850" y="461" width="526" height="110" rx="16" fill="#e8eee8" stroke="#cad7cc"/>
+<text x="873" y="494" font-size="23" fill="#183b47" font-weight="700">За потреби: локальний каркас</text>
+<text x="873" y="522" font-size="20" fill="#146d5d" font-weight="500" class="mono">new_app_materialize</text>
+<text x="873" y="551" font-size="19" fill="#526c73" font-weight="400">Точний запропонований шлях + підтвердження</text>
+<path d="M 107 571 L 107 594" stroke="#7d989f" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<rect x="64" y="604" width="1312" height="143" rx="16" fill="#ffffff" stroke="#d6e2db"/>
+<rect x="84" y="621" width="44" height="44" rx="12" fill="#dcefe9" stroke="none"/>
+<text x="97" y="651" font-size="24" fill="#146d5d" font-weight="700">2</text>
+<text x="147" y="651" font-size="27" fill="#183b47" font-weight="700">Перевірити локально й за метаданими компілятора</text>
+<rect x="147" y="670" width="364" height="39" rx="8" fill="#edf4f4" stroke="none"/>
+<text x="163" y="696" font-size="20" fill="#183b47" font-weight="500" class="mono">query_valid_props</text>
+<rect x="531" y="670" width="364" height="39" rx="8" fill="#edf4f4" stroke="none"/>
+<text x="547" y="696" font-size="20" fill="#183b47" font-weight="500" class="mono">local_validate</text>
+<rect x="915" y="670" width="434" height="39" rx="8" fill="#edf4f4" stroke="none"/>
+<text x="931" y="696" font-size="20" fill="#183b47" font-weight="500" class="mono">compiler_truth_audit</text>
+<text x="147" y="732" font-size="20" fill="#526c73" font-weight="400">Локальна перевірка не доводить успіху на сервері.</text>
+<path d="M 107 747 L 107 771" stroke="#7d989f" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<rect x="64" y="781" width="1312" height="143" rx="16" fill="#ffffff" stroke="#d6e2db"/>
+<rect x="84" y="798" width="44" height="44" rx="12" fill="#dcefe9" stroke="none"/>
+<text x="97" y="828" font-size="24" fill="#146d5d" font-weight="700">3</text>
+<text x="147" y="828" font-size="27" fill="#183b47" font-weight="700">Перевірити середовище, потім застосунок на сервері</text>
+<rect x="147" y="847" width="364" height="39" rx="8" fill="#edf4f4" stroke="none"/>
+<text x="163" y="873" font-size="20" fill="#183b47" font-weight="500" class="mono">runtime_preflight</text>
+<rect x="531" y="847" width="364" height="39" rx="8" fill="#edf4f4" stroke="none"/>
+<text x="547" y="873" font-size="20" fill="#183b47" font-weight="500" class="mono">runtime_doctor</text>
+<rect x="915" y="847" width="434" height="39" rx="8" fill="#e1eee4" stroke="none"/>
+<text x="931" y="873" font-size="20" fill="#183b47" font-weight="500" class="mono">runtime_validate</text>
+<text x="147" y="909" font-size="20" fill="#526c73" font-weight="400">Збережене підключення SQLcl + відповідний APEX workspace</text>
+<path d="M 720 924 L 720 947" stroke="#7d989f" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<rect x="64" y="957" width="1312" height="73" rx="16" fill="#fbefcf" stroke="#e4ce95"/>
+<text x="88" y="988" font-size="27" fill="#725017" font-weight="700">Підтверджений успіх на сервері → вибір користувача</text>
+<text x="88" y="1016" font-size="20" fill="#725017" font-weight="400">Невдала перевірка повертає до діагностики та виправлень.</text>
+<path d="M 250 1030 L 250 1054" stroke="#7d989f" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 905 1030 L 905 1054" stroke="#7d989f" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<rect x="64" y="1065" width="384" height="284" rx="16" fill="#e8efeb" stroke="#c8d9cd"/>
+<text x="88" y="1104" font-size="25" fill="#183b47" font-weight="700">Завершити перевірку</text>
+<text x="88" y="1147" font-size="19" fill="#183b47" font-weight="400">Обрати “Check APEXlang code”</text>
+<path d="M 88 1170 L 424 1170" stroke="#c3d4ca" stroke-width="2" fill="none"/>
+<text x="88" y="1202" font-size="18" fill="#526c73" font-weight="400">Немає UI, скасування чи таймаут</text>
+<text x="88" y="1230" font-size="18" fill="#526c73" font-weight="400">також означають відсутність імпорту.</text>
+<text x="88" y="1315" font-size="23" fill="#146d5d" font-weight="700" class="mono">imported = false</text>
+<rect x="476" y="1065" width="900" height="284" rx="16" fill="#ffffff" stroke="#b5d5c8"/>
+<text x="500" y="1104" font-size="26" fill="#183b47" font-weight="700">Обрати імпорт і конкретний режим цілі</text>
+<rect x="500" y="1125" width="393" height="103" rx="10" fill="#f0f5ef" stroke="none"/>
+<rect x="913" y="1125" width="439" height="103" rx="10" fill="#f0f5ef" stroke="none"/>
+<text x="518" y="1155" font-size="17" fill="#146d5d" font-weight="700">ОНОВИТИ НАЯВНИЙ</text>
+<text x="518" y="1184" font-size="21" fill="#183b47" font-weight="400">Довести наявність одного</text>
+<text x="518" y="1211" font-size="21" fill="#183b47" font-weight="400">застосунку на сервері.</text>
+<text x="931" y="1155" font-size="17" fill="#146d5d" font-weight="700">СТВОРИТИ НОВИЙ</text>
+<text x="931" y="1184" font-size="21" fill="#183b47" font-weight="400">Довести відсутність alias,</text>
+<text x="931" y="1211" font-size="21" fill="#183b47" font-weight="400">потім підтвердити створення ще раз.</text>
+<rect x="500" y="1244" width="852" height="81" rx="10" fill="#146d5d" stroke="none"/>
+<text x="518" y="1276" font-size="25" fill="#ffffff" font-weight="700">Той самий хеш → повторна перевірка + імпорт</text>
+<text x="518" y="1306" font-size="20" fill="#e1f3e9" font-weight="400">Одна сесія SQLcl · validation, import, runtime gate = pass</text>
+<path d="M 64 1380 L 1376 1380" stroke="#c7d6ce" stroke-width="2" fill="none"/>
+<text x="64" y="1417" font-size="22" fill="#183b47" font-weight="700">5 хв на діалог</text>
+<text x="366" y="1417" font-size="22" fill="#183b47" font-weight="700">10 хв на процес</text>
+<text x="735" y="1417" font-size="22" fill="#183b47" font-weight="700">Зберегти звіти до завершення сесії</text>
+<text x="64" y="1458" font-size="17" fill="#526c73" font-weight="400">Незалежна інтеграція · Пакет 0.3.0 · Код d7bfb59 · 2026-09-12</text>
+<text x="1000" y="1458" font-size="16" fill="#526c73" font-weight="400">Документація: docs/uk/README.md</text>
+</svg>

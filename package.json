@@ -22,6 +22,7 @@
     "agent-skill"
   ],
   "files": [
+    "docs",
     "extensions",
     "skills",
     "!extensions/**/__pycache__/**",
