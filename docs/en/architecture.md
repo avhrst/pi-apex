@@ -11,10 +11,12 @@
 | Process adapter | Builds argument arrays, checks paths and runtime context, tracks app digests, runs child processes | [apexlang-cli.mjs](../../extensions/lib/apexlang-cli.mjs) |
 | Local validation wrapper | Runs vocabulary, DSL, and validation-rule checks | [apexlang-local-validate.mjs](../../extensions/lib/apexlang-local-validate.mjs) |
 | Parser acceleration | Caches repeated block parsing and nesting lookups within one Python process | [apexlang-local-validator.py](../../extensions/lib/apexlang-local-validator.py) |
-| Runtime bridge | Invokes the bundled roundtrip runtime; supports a controlled SQLcl PTY path | [roundtrip bridge](../../extensions/lib/apexlang-runtime-roundtrip.mjs), [PTY bridge](../../extensions/lib/apexlang-sqlcl-pty.py) |
+| Runtime bridge | Invokes the bundled validation and roundtrip runtimes; supports a controlled SQLcl PTY path | [validation bridge](../../extensions/lib/apexlang-runtime-validate.mjs), [roundtrip bridge](../../extensions/lib/apexlang-runtime-roundtrip.mjs), [PTY bridge](../../extensions/lib/apexlang-sqlcl-pty.py) |
 | Compatibility advisory | Detects broad findings and presents version guidance | [compatibility.ts](../../extensions/apexlang/compatibility.ts), [table](../../extensions/apexlang/ords-sqlcl-compatibility.json) |
 
 The skill is vendored unchanged at the commit and digest recorded in [UPSTREAM.json](../../UPSTREAM.json). The extension's acceleration wraps Oracle's validator; it does not edit the vendor snapshot or omit validation stages. Pi discovers the skill through the `pi.skills` package entry and loads task-specific material progressively.
+
+The validation bridge supplies the packaged grammar and Python validator paths for Media List target-build checks. Oracle's 2026.09.21 runtime otherwise looks for these files under source-tree paths that are absent from the public skill package. The bridge retains Oracle's validation and failure handling.
 
 ## Working flow
 
@@ -58,7 +60,7 @@ There is no standalone import action in the model-visible action list. Every con
 
 App-scoped runtime operations require a JSON object in `deployments/default.json`. The adapter accepts workspace metadata under `workspace.name` or the exported `app.workspace.name`, rejects conflicts, and compares it with the explicit `workspace_name` without case sensitivity. An unresolved `__REQUIRED_WORKSPACE_NAME__` placeholder is rejected.
 
-When normalization is needed, the adapter copies the app under the session output root and injects the workspace there. A runtime check may use the original app when top-level workspace metadata is already suitable. Import and create-new proof always force staging. The digest normalizes JSON formatting and the injected `workspace.name`; other deployment properties remain part of the digest.
+The adapter copies the app under the session output root for runtime preflight, diagnostics, validation, import, and create-new proof. It injects the workspace and uses Oracle's line-ending normalizer on the staged `.apx` files before computing the digest. Project files remain unchanged. Validation and import therefore use the same LF-normalized snapshot. The digest also normalizes JSON formatting and the injected `workspace.name`; other deployment properties remain part of the digest, and substantive source changes require revalidation.
 
 The extension creates a temporary `pi-apexlang-*` output directory on first use and reuses it during the session. Reports and runtime context therefore share a stable session root. Known validation/roundtrip evidence is cleared before a new corresponding run. The entire output root is removed on `session_shutdown`: copy needed evidence before ending the session.
 

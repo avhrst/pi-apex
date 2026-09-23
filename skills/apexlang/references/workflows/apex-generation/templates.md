@@ -1,6 +1,6 @@
 > All `node tools/apexctl.mjs ...` commands are package-root relative: run them from the packaged skill root, or invoke that script by explicit path.
 
-# Template & Sub-Skill References — Apex Developer
+# Template & Sub-Skill References — APEX Developer
 
 ## Authoritative Policies
 - `references/policies/governance/00-governance.md`

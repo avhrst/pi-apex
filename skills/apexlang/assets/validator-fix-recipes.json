@@ -20,9 +20,54 @@
       "owningGuidance": ["references/policies/memory-bank/00-guard/ai.guard.md", "references/workflows/apex-generation/agents/40-agent-revision.md"]
     },
     "APEXLANG_LF_LINE_ENDINGS_REQUIRED_001": {
-      "cause": ".apx artifact contains CRLF line endings.",
+      "cause": ".apx artifact contains CRLF or CR line endings.",
       "deterministicFix": "Rewrite only the affected .apx files with LF line endings; keep content unchanged.",
       "owningGuidance": ["references/policies/memory-bank/00-guard/ai.guard.md", ".gitattributes"]
+    },
+    "AVATAR_AUTHORIZATION_SCHEME_EVIDENCE_REQUIRED_001": {
+      "cause": "Restricted standalone Avatar visibility lacks a proven shared authorization scheme or references an invented scheme name.",
+      "deterministicFix": "Use mustNotBePublicUser or resolve the exact shared authorization declaration from the validation set and emit its @alias as region security.authorizationScheme; stop with Missing Inputs if it cannot be resolved.",
+      "owningGuidance": ["templates/template-components/avatar/avatar._common.md", "references/policies/memory-bank/10-global/apex.global.md"]
+    },
+    "AVATAR_COLUMN_IDENTIFIER_INVALID_001": {
+      "cause": "A standalone Avatar child column uses a lowercase or hyphenated external identifier rejected by the live compiler.",
+      "deterministicFix": "Rename the Avatar child declaration to uppercase snake_case, for example column AVATAR_INITIALS (...), while preserving its source.databaseColumn mapping.",
+      "owningGuidance": ["templates/template-components/avatar/avatar._common.md"]
+    },
+    "AVATAR_IMAGE_URL_COLUMN_REQUIRED_001": {
+      "cause": "A standalone, Timeline-nested, or Comments-nested Avatar image uses a missing or unproven image source shape.",
+      "deterministicFix": "Emit the active Avatar image property—settings.image for standalone Avatar or plugin-avatar.image for Timeline and Comments—as { type: urlColumn, urlColumn: <projected varchar2 database column> }; declare that projection through a named child column and remove BLOB or alternate image properties.",
+      "owningGuidance": ["templates/template-components/avatar/avatar.report-image-url-column.md", "references/domains/template-components/timeline.md", "references/domains/template-components/comments.md"]
+    },
+    "AVATAR_IMAGE_URL_SAFETY_REQUIRED_001": {
+      "cause": "An Avatar URL or URL-column image is not application-managed or can render a traversal, arbitrary, external, protocol-relative, javascript:, or data: URL.",
+      "deterministicFix": "For URL columns, project :APP_FILES || 'relative/path' or :APEX_FILES || 'relative/path'. For a static Metric Card URL, use #APP_FILES#relative/path or #APEX_FILES#relative/path. Reject template/substitution tokens inside SQL literals, AUTHENTICATED_URL_PREFIX, BLOB endpoints, traversal, raw database URL columns, and absolute external URLs.",
+      "owningGuidance": ["templates/template-components/avatar/avatar.report-image-url-column.md", "templates/template-components/metric-card/metric-card.report-avatar-badge.md", "references/policies/memory-bank/10-global/apex.global.md"]
+    },
+    "AVATAR_ICON_ALLOWLIST_REQUIRED_001": {
+      "cause": "An Avatar icon has an unknown icon or modifier, contains multiple icons or arbitrary classes, or comes from an unverified dynamic column.",
+      "deterministicFix": "Use exactly one icon from the canonical pinned Font APEX index plus only optional listed modifiers. For column-backed icons, project approved literal values directly or map source states with an explicit SQL CASE expression whose every output satisfies that same canonical contract.",
+      "owningGuidance": ["assets/indexes/font-apex-icon-index.json", "templates/template-components/avatar/avatar.report-icon.md", "references/policies/memory-bank/40-components/apex.region-media.md"]
+    },
+    "AVATAR_ACCESSIBLE_DESCRIPTION_REQUIRED_001": {
+      "cause": "A meaningful Avatar lacks a verified human-readable description, the description mapping is invalid, or decorative intent is contradictory.",
+      "deterministicFix": "Set settings.description to nonempty human-readable text or an &UPPERCASE_COLUMN. substitution backed by a declared varchar2 child column. For a dynamic source, verify its meaning and persist AVATAR_DESCRIPTION_EVIDENCE_SOURCE=schema_doc, =live_db, or =user_asserted in region comments. For a decorative Avatar, omit both the description property and its child column and add AVATAR_PURPOSE_DECORATIVE.",
+      "owningGuidance": ["templates/template-components/avatar/avatar._common.md", "references/policies/memory-bank/10-global/apex.global.md"]
+    },
+    "AVATAR_CSS_CLASSES_SAFE_REQUIRED_001": {
+      "cause": "Avatar cssClasses are dynamic, unscoped, visibility-changing, undocumented, or use framework utilities without explicit-request evidence.",
+      "deterministicFix": "Prefer native Avatar shape, size, and spacing attributes. If custom CSS is required, use static avatar-* class names and add AVATAR_CSS_RATIONALE=<reason> to region comments. Framework utilities also require AVATAR_FRAMEWORK_UTILITIES_EXPLICIT_REQUEST; visibility-changing classes remain forbidden.",
+      "owningGuidance": ["templates/template-components/avatar/avatar._common.md", "references/policies/memory-bank/40-components/apex.templates.md"]
+    },
+    "AVATAR_INITIALS_COLUMN_REFERENCE_REQUIRED_001": {
+      "cause": "Standalone Avatar settings.initials uses substitution syntax or does not reference a declared varchar2 Avatar source column.",
+      "deterministicFix": "Set settings.initials to the direct uppercase source-column identifier, for example AVATAR_INITIALS, without an ampersand or trailing period; keep &COLUMN_NAME. syntax only for free-text settings such as description.",
+      "owningGuidance": ["templates/template-components/avatar/avatar.report-initials.md"]
+    },
+    "AVATAR_TYPE_PAYLOAD_REQUIRED_001": {
+      "cause": "Standalone Avatar settings omit the selected type payload or mix payloads from multiple Avatar types.",
+      "deterministicFix": "Choose exactly one type—initials, icon, or image—emit its matching payload, and remove the other payload properties.",
+      "owningGuidance": ["templates/template-components/avatar/avatar._common.md"]
     },
     "APP_TEMPLATE_ARTIFACT_LEAK_001": {
       "cause": "Generated app root contains template-only files or unexpected top-level entries.",
@@ -94,6 +139,46 @@
       "deterministicFix": "Populate sourceEvidence and link every page/action/layout/LOV decision to evidence; stop with Missing Inputs for unsupported decisions.",
       "owningGuidance": ["references/workflows/apexlang/workflow-create-app-from-fr-and-model.md", "references/workflows/apexlang/application-spec.template.md"]
     },
+    "BADGE_ACTION_LAYOUT_SEQUENCE_REQUIRED_001": {
+      "cause": "A Badge link action omits the component layout sequence required by the live compiler.",
+      "deterministicFix": "Add layout { sequence: <number> } to every Badge action, preserving position: link and the existing behavior target.",
+      "owningGuidance": ["templates/template-components/badge/badge._common.md", "templates/template-components/badge/badge.report-link.md"]
+    },
+    "BADGE_ACTION_CARDINALITY_REQUIRED_001": {
+      "cause": "A Badge region defines more than one action even though the component supports a single link action.",
+      "deterministicFix": "Keep at most one Badge action, preserve position: link and numeric layout.sequence, and remove duplicate actions.",
+      "owningGuidance": ["templates/template-components/badge/badge._common.md", "templates/template-components/badge/badge.report-link.md"]
+    },
+    "BADGE_LABEL_STATIC_REQUIRED_001": {
+      "cause": "A raw-rendered Badge label is mapped from a column, substitution token, or unresolved template value.",
+      "deterministicFix": "Replace settings.label with concise trusted static text; keep row-varying content in the escaped Badge value.",
+      "owningGuidance": ["templates/template-components/badge/badge._common.md"]
+    },
+    "BADGE_LINK_ATTRIBUTES_FORBIDDEN_001": {
+      "cause": "A Badge action contains custom linkAttributes that may carry arbitrary classes, attributes, or inline event handlers.",
+      "deterministicFix": "Remove behavior.linkAttributes and express navigation through the reviewed structured behavior.target.",
+      "owningGuidance": ["templates/template-components/badge/badge._common.md", "templates/template-components/badge/badge.report-link.md"]
+    },
+    "BADGE_STATE_ALLOWLIST_REQUIRED_001": {
+      "cause": "An explicitly mapped Badge state projection is dynamic, nullable, mixed-case, or can return values outside danger, warning, success, and info.",
+      "deterministicFix": "If state was not requested, remove settings.state or plugin-badge.state, the state projection, and its child column. If state was requested, keep a projected varchar2 state column and preserve authoritative source evidence; for sqlQuery sources, use an exact lowercase literal or a CASE expression whose every branch, including an explicit ELSE, returns danger, warning, success, or info.",
+      "owningGuidance": ["templates/template-components/badge/badge._common.md", "templates/template-components/metric-card/metric-card.report-avatar-badge.md"]
+    },
+    "BADGE_STATE_DATATYPE_REQUIRED_001": {
+      "cause": "The source column mapped by Badge settings.state does not declare source.dataType: varchar2.",
+      "deterministicFix": "Declare the mapped state child column as source.dataType: varchar2 and keep its SQL results restricted to the exact lowercase semantic states.",
+      "owningGuidance": ["templates/template-components/badge/badge._common.md"]
+    },
+    "BADGE_TARGET_URL_ALLOWLIST_REQUIRED_001": {
+      "cause": "A Badge action uses redirectUrl behavior or targetUrl while no application-specific destination allowlist is modeled in the repository.",
+      "deterministicFix": "Remove redirectUrl behavior and behavior.targetUrl, then use a reviewed structured behavior.target. Keep external URL navigation blocked until an application-specific allowlist contract exists.",
+      "owningGuidance": ["templates/template-components/badge/badge._common.md", "templates/template-components/badge/badge.report-link.md"]
+    },
+    "BADGE_VALUE_DATATYPE_REQUIRED_001": {
+      "cause": "The source column mapped by Badge settings.value uses a datatype that the APEX 26.1 Badge value attribute does not support.",
+      "deterministicFix": "Change the mapped value projection and child column to varchar2, number, date, intervalYearToMonth, or intervalDayToSecond; do not restrict unrelated auxiliary columns.",
+      "owningGuidance": ["templates/template-components/badge/badge._common.md"]
+    },
     "BREADCRUMB_COVERAGE_ENTRY_REQUIRED_001": {
       "cause": "A non-modal page is missing a shared breadcrumb entry.",
       "deterministicFix": "Add a shared-components/breadcrumbs.apx entry for the page with correct pageNumber and parent/root relationship.",
@@ -153,6 +238,66 @@
       "cause": "Content Row display settings reference query columns as bare aliases.",
       "deterministicFix": "Rewrite column-backed overline/title/description/miscellaneous settings as &COLUMN_NAME. substitutions; leave true literals unchanged.",
       "owningGuidance": ["templates/template-components/content-row/content-row._common.md"]
+    },
+    "MEDIA_LIST_ACTION_BEHAVIOR_REQUIRED_001": {
+      "cause": "A Media List link action has a behavior/target combination that cannot execute declaratively.",
+      "deterministicFix": "Use redirectThisApp with one structured target and remove contradictory behavior properties.",
+      "owningGuidance": ["templates/template-components/media-list/media-list.report-link.md"]
+    },
+    "MEDIA_LIST_TRIGGER_ACTION_OWNER_REQUIRED_001": {
+      "cause": "A Media List link action uses triggerAction without validator-visible ownership by a dynamic action.",
+      "deterministicFix": "Replace triggerAction with redirectThisApp and a reviewed structured target, or omit the action until dynamic-action ownership can be proven.",
+      "owningGuidance": ["templates/template-components/media-list/media-list.report-link.md"]
+    },
+    "MEDIA_LIST_ACTION_CARDINALITY_REQUIRED_001": {
+      "cause": "A Media List region defines more than its single native link action.",
+      "deterministicFix": "Keep at most one action at position link, or select another component family when multiple interactions are required.",
+      "owningGuidance": ["templates/template-components/media-list/media-list.report-link.md"]
+    },
+    "MEDIA_LIST_ACTION_LAYOUT_SEQUENCE_REQUIRED_001": {
+      "cause": "A Media List action omits the compiler-required layout sequence.",
+      "deterministicFix": "Add a multiline layout block with a numeric sequence to the single link action.",
+      "owningGuidance": ["templates/template-components/media-list/media-list.report-link.md"]
+    },
+    "MEDIA_LIST_AVATAR_BADGE_CONTRACT_REQUIRED_001": {
+      "cause": "A Media List Avatar or Badge display toggle is inconsistent with its native plugin block.",
+      "deterministicFix": "Emit settings.displayAvatar: true with plugin-avatar, and settings.displayBadge: true with plugin-badge; otherwise omit both members of the corresponding pair.",
+      "owningGuidance": ["templates/template-components/media-list/media-list.report-avatar-badge.md"]
+    },
+    "MEDIA_LIST_COLUMN_SHAPE_REQUIRED_001": {
+      "cause": "A Media List report column does not use the single column variant selected by the active target-build contracts.",
+      "deterministicFix": "Resolve region.column under themeTemplateComponent/mediaList, then emit exactly its named or unnamed declaration, required properties, layout, source mapping, datatype, and supported identity or visibility property for every projection.",
+      "owningGuidance": ["templates/template-components/media-list/media-list._common.md"]
+    },
+    "MEDIA_LIST_DISPLAY_MODE_REQUIRED_001": {
+      "cause": "A Media List mixes partial and report-only structures or omits report source metadata.",
+      "deterministicFix": "For report mode add a verified source, deterministic orderBy, and complete columns; for partial mode remove source, orderBy, columns, grouping, layout, size, and theme-color settings.",
+      "owningGuidance": ["templates/template-components/media-list/media-list._common.md", "templates/template-components/media-list/media-list.partial.md"]
+    },
+    "MEDIA_LIST_CAPABILITY_CONTRACT_REQUIRED_001": {
+      "cause": "The active target-build contracts do not resolve exactly one Media List report-column shape.",
+      "deterministicFix": "Load or regenerate the target-build component contract and run the parent-aware region.column grammar contract for themeTemplateComponent/mediaList; stop with Missing Inputs if it remains ambiguous.",
+      "owningGuidance": ["templates/template-components/media-list/media-list._common.md"]
+    },
+    "MEDIA_LIST_CAPABILITY_UNSUPPORTED_001": {
+      "cause": "A Media List emits grouping or a nested optional property that is not exposed by the active target-build component contract.",
+      "deterministicFix": "Remove the unsupported feature for this target or select a target whose live component contract exposes the exact block, property, and accepted value; do not convert a target-specific absence into a universal prohibition.",
+      "owningGuidance": ["templates/template-components/media-list/media-list.report-grouped.md", "templates/template-components/media-list/media-list.report-avatar-badge.md"]
+    },
+    "MEDIA_LIST_MAPPING_REQUIRED_001": {
+      "cause": "A Media List setting, action, or nested feature references a missing or incompatible report projection.",
+      "deterministicFix": "Project the required source alias, declare it once with the active compiler-selected Media List column shape and correct datatype, and use bare aliases for session-state selectors or &COLUMN. only for supported free-text substitutions.",
+      "owningGuidance": ["templates/template-components/media-list/media-list._common.md"]
+    },
+    "MEDIA_LIST_PARTIAL_BINDING_REQUIRED_001": {
+      "cause": "A partial Media List references a page-item-shaped session-state selector that is not declared in the validation set.",
+      "deterministicFix": "Declare the referenced page item in the application artifact, correct the selector to an existing item, or use a true literal value.",
+      "owningGuidance": ["templates/template-components/media-list/media-list.partial.md"]
+    },
+    "MEDIA_LIST_TARGET_URL_ALLOWLIST_REQUIRED_001": {
+      "cause": "A Media List action uses targetUrl or custom linkAttributes without an application URL allowlist.",
+      "deterministicFix": "Remove targetUrl and linkAttributes, then use a reviewed structured redirectThisApp target.",
+      "owningGuidance": ["templates/template-components/media-list/media-list.report-link.md"]
     },
     "DASHBOARD_LAYOUT_ROW_PLAN_REQUIRED_001": {
       "cause": "Dashboard regions were emitted without a row plan or the emitted rows do not match the plan.",
@@ -219,10 +364,15 @@
       "deterministicFix": "Add listEntries.displayFilterInitially: true for Product, Customer, Store, Employee, Supplier, Email, SKU, name/title, and similar high-cardinality facets.",
       "owningGuidance": ["references/policies/memory-bank/30-pages/apex.faceted-search.md"]
     },
+    "FILE_UPLOAD_DISPLAY_MODE_REQUIRED_001": {
+      "cause": "A File Upload item omits its explicit display mode and would inherit the compiler's simple inline file-browse UI.",
+      "deterministicFix": "Add display.displayAs. Use blockDropzone by default with dropzoneTitle 'Drop files here' and dropzoneDesc 'or click to browse'; preserve an explicitly requested inlineDropzone or nativeFileBrowse mode.",
+      "owningGuidance": ["templates/items/file-upload/file-upload._common.md"]
+    },
     "FA_ICON_REQUIRED_001": {
-      "cause": "An icon-bearing property uses a non-Font APEX icon token, custom CSS icon alias, image icon, or framework-specific icon class.",
-      "deterministicFix": "Replace the value with a conservative Font APEX fa-* class such as fa-table, fa-users, fa-map-marker, fa-package, fa-image, fa-filter, fa-edit, or fa-plus.",
-      "owningGuidance": ["references/policies/memory-bank/40-components/apex.region-media.md", "references/policies/memory-bank/40-components/apex.buttons.md"]
+      "cause": "An icon-bearing property is empty, dynamic where a literal is required, or uses a non-catalog icon, duplicate base/modifier token, custom CSS alias, image icon, or framework-specific class.",
+      "deterministicFix": "Read the pinned Font APEX index and replace the value with exactly one listed icon, at most one optional fa base class, and unique optional listed modifiers; do not infer or invent fa-* tokens.",
+      "owningGuidance": ["assets/indexes/font-apex-icon-index.json"]
     },
     "FACETED_SEARCH_DEFAULT_SETTINGS_REQUIRED_001": {
       "cause": "A faceted-search region is missing the standard default settings block or has a non-default value for a required default setting.",
@@ -349,6 +499,46 @@
       "deterministicFix": "Use one Metric Card region with a normalized multi-row source, usually UNION ALL with one row per metric.",
       "owningGuidance": ["templates/template-components/metric-card/metric-card._common.md", "references/policies/memory-bank/30-pages/apex.dashboard.md"]
     },
+    "METRIC_CARD_REPORT_CONTRACT_REQUIRED_001": {
+      "cause": "A Metric Card is missing its required metric binding, complete source-column coverage, or a compiler-backed attribute value.",
+      "deterministicFix": "Start from metric-card.report-minimal.md, emit settings.metric, map query-backed text with &COLUMN. syntax, and add one typed child column for every source projection.",
+      "owningGuidance": ["templates/template-components/metric-card/metric-card._common.md", "templates/template-components/metric-card/metric-card.report-minimal.md"]
+    },
+    "METRIC_CARD_PARTIAL_SCOPE_REQUIRED_001": {
+      "cause": "A partial-mode Metric Card contains report-only settings or blocks.",
+      "deterministicFix": "Start from metric-card.partial-minimal.md and remove settings.layout, settings.itemCssClasses, plugin-grouping, rowSelection, messages, and pagination; keep only complete component-scope Avatar, Badge, text, CSS-class, and link-action branches.",
+      "owningGuidance": ["templates/template-components/metric-card/metric-card._common.md", "templates/template-components/metric-card/metric-card.partial-minimal.md"]
+    },
+    "METRIC_CARD_AVATAR_BADGE_REQUIRED_001": {
+      "cause": "A Metric Card nested Avatar or Badge block has an incomplete type/payload, unsafe media or label content, invalid selector syntax, incompatible child-column datatype, or unsupported conditional property.",
+      "deterministicFix": "Start from metric-card.report-avatar-badge.md; keep displayAvatar/displayBadge true, match exactly one Avatar payload to its type, omit Avatar style for image type, use typed projected columns for Avatar media, require Badge label/value, use bare projected aliases for selector fields, use static Font APEX icons, and apply only Metric Card-specific enum values.",
+      "owningGuidance": ["templates/template-components/metric-card/metric-card._common.md", "templates/template-components/metric-card/metric-card.report-avatar-badge.md"]
+    },
+    "METRIC_CARD_SELECTION_ITEMS_REQUIRED_001": {
+      "cause": "A Metric Card native row-selection mode has incompatible or missing same-page selection items.",
+      "deterministicFix": "Use focusOnly with no items, singleSelection with a same-page hidden currentSelectionPageItem, or multipleSelection with that hidden item plus a same-page checkbox/switch selectAllPageItem; keep a primary-key child column and classify the hidden client-owned selection item with documented sessionStateProtection: unrestricted.",
+      "owningGuidance": ["templates/template-components/metric-card/metric-card._common.md", "templates/template-components/metric-card/metric-card.report-grouping-selection.md"]
+    },
+    "METRIC_CARD_SETTINGS_SUBSTITUTION_REQUIRED_001": {
+      "cause": "A Metric Card title, metric, or meta setting references a projected SQL alias without APEX report substitution syntax.",
+      "deterministicFix": "Change the query-backed text mapping from COLUMN_NAME to &COLUMN_NAME.; keep literal text unchanged and keep sessionStateValue selectors as bare aliases.",
+      "owningGuidance": ["templates/template-components/metric-card/metric-card._common.md", "templates/template-components/metric-card/metric-card.report-minimal.md"]
+    },
+    "METRIC_CARD_LINK_ACTION_REQUIRED_001": {
+      "cause": "A Metric Card action uses an unsupported position, action template, unsafe URL/attribute input, or non-declarative navigation shape.",
+      "deterministicFix": "Use action.position: link with deterministic layout.sequence; use a structured target for application navigation, or keep redirectUrl only with a reviewed safe targetUrl. Remove unsafe schemes, inline handlers, URL-bearing link attributes, scriptable CSS, unsafe dynamic attributes, and unsafe new-window attributes.",
+      "owningGuidance": ["templates/template-components/metric-card/metric-card._common.md", "templates/template-components/metric-card/metric-card.report-link.md"]
+    },
+    "METRIC_CARD_TARGET_URL_SAFETY_REQUIRED_001": {
+      "cause": "A Metric Card redirectUrl action has an empty, dangerous, protocol-relative, same-app scalar, control-character-bearing, wholly dynamic, or dynamically substituted scheme, host, path, or fragment.",
+      "deterministicFix": "Use a structured target for APEX application navigation. For redirectUrl, use a reviewed relative URL or an http, https, mailto, or tel URL; keep substitutions inside query parameters so the scheme, host, path, and fragment remain static.",
+      "owningGuidance": ["templates/template-components/metric-card/metric-card._common.md", "templates/template-components/metric-card/metric-card.report-link.md"]
+    },
+    "METRIC_CARD_LINK_ATTRIBUTES_SAFETY_REQUIRED_001": {
+      "cause": "Metric Card linkAttributes contain dynamic input, an inline event handler, a URL-bearing attribute, scriptable CSS, an unsafe URL scheme, or an unsafe new-window target.",
+      "deterministicFix": "Keep linkAttributes static; remove event handlers, URL-bearing attributes, scriptable CSS, and dynamic substitutions. Put navigation in targetUrl, and pair target=\"_blank\" with rel=\"noopener\" or rel=\"noreferrer\".",
+      "owningGuidance": ["templates/template-components/metric-card/metric-card._common.md", "templates/template-components/metric-card/metric-card.report-link.md"]
+    },
     "METRIC_CARD_STANDARD_TEMPLATE_FORBIDDEN_001": {
       "cause": "Dashboard KPI Metric Card uses standard chrome where blank/attribute chrome is expected.",
       "deterministicFix": "Use the documented blank-with-attributes/region appearance for KPI strips unless requirements explicitly need a titled wrapper.",
@@ -424,20 +614,65 @@
       "deterministicFix": "Update the page alias to the uppercase filename slug, for example p00001-home.apx must declare alias: HOME, or rename the file to match the intended alias.",
       "owningGuidance": ["references/policies/memory-bank/30-pages/apex.page.md"]
     },
+    "PAGE_DIRECT_PROPERTY_INVALID_001": {
+      "cause": "A page declaration redundantly emits an unsupported direct page property such as page: 1.",
+      "deterministicFix": "Remove the direct page property. Keep the page number only in the top-level declaration, for example page 1 (.",
+      "owningGuidance": ["references/policies/memory-bank/30-pages/apex.page.md"]
+    },
     "PAGE_FILENAME_NUMBER_MISMATCH_001": {
       "cause": "The canonical page filename number does not match the page declaration.",
       "deterministicFix": "Update the page declaration number or rename the file so pNNNNN-*.apx and page N agree.",
       "owningGuidance": ["references/policies/memory-bank/30-pages/apex.page.md"]
     },
-    "SMART_FILTER_MAP_TARGET_COLUMNS_REQUIRED_001": {
-      "cause": "Smart Filters target a map region whose layer source does not project/filter the required columns.",
-      "deterministicFix": "Retarget Smart Filters to a companion report/cards results region and refresh the sibling map explicitly.",
-      "owningGuidance": ["references/policies/memory-bank/30-pages/apex.smart-filter-search.md", "references/policies/memory-bank/30-pages/apex.map-page.md"]
+    "RDS_CONTROLLER_REQUIRED_001": {
+      "cause": "One or more page regions opt into a Region Display Selector, but the page has no RDS controller.",
+      "deterministicFix": "Add one page-level type: regionDisplaySelector controller or remove advanced.regionDisplaySelector from the orphaned targets.",
+      "owningGuidance": ["references/domains/page-components/regions/region-display-selector/workflow-region-display-selector.md"]
     },
-    "SMART_FILTER_MAP_TARGET_UNSUPPORTED_001": {
-      "cause": "Smart Filters target a map region directly, which is not valid for the current generation contract.",
-      "deterministicFix": "Create or use a companion report/cards results region as filteredRegion, keep the map as a sibling visualization, and refresh the map explicitly after Smart Filter changes.",
-      "owningGuidance": ["references/policies/memory-bank/30-pages/apex.smart-filter-search.md", "references/policies/memory-bank/30-pages/apex.map-page.md"]
+    "RDS_CONTROLLER_SELF_TARGET_FORBIDDEN_001": {
+      "cause": "The Region Display Selector controller opts itself into its controlled-region set.",
+      "deterministicFix": "Remove advanced.regionDisplaySelector from the controller. Keep the flag only on explicitly selected sibling content regions.",
+      "owningGuidance": ["references/domains/page-components/regions/region-display-selector/workflow-region-display-selector.md"]
+    },
+    "RDS_MINIMUM_TARGETS_REQUIRED_001": {
+      "cause": "The Region Display Selector has fewer than two eligible sibling targets.",
+      "deterministicFix": "Resolve at least two page-level sibling content regions and set advanced.regionDisplaySelector: true on those exact regions.",
+      "owningGuidance": ["references/domains/page-components/regions/region-display-selector/workflow-region-display-selector.md"]
+    },
+    "RDS_SHOW_ALL_MODE_REQUIRED_001": {
+      "cause": "settings.includeShowAll is missing from View Single Region mode or is emitted for Scroll Window mode where the property is inactive.",
+      "deterministicFix": "For mode: viewSingleRegion, emit includeShowAll explicitly. For mode: scrollWindow, remove includeShowAll.",
+      "owningGuidance": ["references/domains/page-components/regions/region-display-selector/workflow-region-display-selector.md"]
+    },
+    "RDS_SIBLING_TARGET_REQUIRED_001": {
+      "cause": "An RDS controller or selected target is nested instead of being a page-level sibling region.",
+      "deterministicFix": "Move the controller or target to page level, or remove advanced.regionDisplaySelector from the nested region.",
+      "owningGuidance": ["references/domains/page-components/regions/region-display-selector/workflow-region-display-selector.md"]
+    },
+    "RDS_SINGLE_CONTROLLER_REQUIRED_001": {
+      "cause": "A page defines multiple Region Display Selector controllers even though target regions have no controller-specific membership key.",
+      "deterministicFix": "Keep one RDS controller on the page and one unambiguous controlled-region set.",
+      "owningGuidance": ["references/domains/page-components/regions/region-display-selector/workflow-region-display-selector.md"]
+    },
+    "RDS_TARGET_ICON_REQUIRED_001": {
+      "cause": "The RDS displays region icons but a selected region has no appearance.icon.",
+      "deterministicFix": "Add one Font APEX catalogue-valid appearance.icon to every selected region, or set displayRegionIcons: false.",
+      "owningGuidance": ["references/domains/page-components/regions/region-display-selector/workflow-region-display-selector.md", "assets/indexes/font-apex-icon-index.json"]
+    },
+    "RDS_TARGET_LOCATION_FORBIDDEN_001": {
+      "cause": "A breadcrumb or header-region target is opted into the Region Display Selector.",
+      "deterministicFix": "Remove advanced.regionDisplaySelector from breadcrumb/header regions and select only eligible page content regions.",
+      "owningGuidance": ["references/domains/page-components/regions/region-display-selector/workflow-region-display-selector.md"]
+    },
+    "RDS_TARGET_DOM_ID_REQUIRED_001": {
+      "cause": "Selection persistence is enabled but a selected region has no stable static ID.",
+      "deterministicFix": "Add a stable lowercase advanced.htmlDomId to every selected region, or set rememberSelection: false.",
+      "owningGuidance": ["references/domains/page-components/regions/region-display-selector/workflow-region-display-selector.md"]
+    },
+    "RDS_REGION_STATIC_ID_FORBIDDEN_001": {
+      "cause": "A Region Display Selector controller or selected region uses advanced.staticId, which the target APEXlang validator rejects for regions.",
+      "deterministicFix": "Replace advanced.staticId with advanced.htmlDomId on the affected RDS controller or selected region.",
+      "owningGuidance": "references/domains/page-components/regions/region-display-selector/workflow-region-display-selector.md"
     },
     "SMART_FILTER_RESULTS_REGION_ORDER_REQUIRED_001": {
       "cause": "Smart Filters are not ordered before their result region.",
@@ -446,18 +681,73 @@
     },
     "SMART_FILTER_RESULTS_REGION_REQUIRED_001": {
       "cause": "Smart Filters do not have a valid results region target.",
-      "deterministicFix": "Add or reference a supported report/cards-style results region such as Classic Report, Interactive Report/Grid, Cards, or Content Row; do not target maps or filter components.",
+      "deterministicFix": "For APEX 24.2, reference one Classic Report, Cards, Map, or Calendar region. For Map, target its region static id and prove the single layer source. Do not target Interactive Report/Grid, Content Row, layers, or filter components.",
       "owningGuidance": ["references/policies/memory-bank/30-pages/apex.smart-filter-search.md"]
     },
+    "SMART_FILTER_TOPOLOGY_REQUIRED_001": {
+      "cause": "A Smart Filter Search page has multiple Smart Filters regions, an invalid filteredRegion shape, or an ambiguous base-region static id.",
+      "deterministicFix": "Keep exactly one Smart Filters region, set source.filteredRegion to one explicit @<base-region-static-id> reference, and make that target static id unique on the page.",
+      "owningGuidance": ["references/policies/memory-bank/30-pages/apex.smart-filter-search.md", "references/policies/memory-bank/40-components/apex.region-interactions.md"]
+    },
+    "SMART_FILTER_BASE_SOURCE_CONTRACT_REQUIRED_001": {
+      "cause": "The Smart Filter Generation Plan does not prove a secured-view or canonical-SQL base source, its objects and explicit projection, or the decision to preserve the supplied SQL unchanged.",
+      "deterministicFix": "Select secured_view or canonical_sql, record named schema_doc, live_db, or user_asserted evidence matching every actual source object and projected column, prove object_type view plus secured true for a secured view, and preserve the supplied base_source.canonical_sql exactly. Keep the projection explicit and no_rewrite true. Stop with Missing Inputs while any evidence is unresolved.",
+      "owningGuidance": ["references/policies/memory-bank/00-guard/ai.guard.md", "references/policies/memory-bank/30-pages/apex.smart-filter-search.md"]
+    },
     "SMART_FILTER_SETTINGS_UNSUPPORTED_001": {
-      "cause": "A Smart Filters region emits settings unsupported by APEX 26.1 compiler metadata.",
-      "deterministicFix": "Remove the Smart Filters settings block and express counts, exports, and UX affordances through the filtered results region unless compiler truth for the active build proves a valid settings group.",
+      "cause": "The active compiler does not support a required Smart Filters setting, whether emitted or omitted, or an emitted setting is unsupported or inactive.",
+      "deterministicFix": "Stop with Missing Inputs and record each unresolved required setting. Resolve support against the target build or obtain explicit approval for an alternative that satisfies the requirement, then revalidate. Do not treat deleting a required setting or moving its behavior to the results region as a completed repair. Never emit unsupported DSL.",
+      "owningGuidance": ["references/policies/memory-bank/30-pages/apex.smart-filter-search.md", "templates/region-components/smart-filter-search/smart-filter-search._common.md"]
+    },
+    "SMART_FILTER_SETTINGS_COMPILER_EVIDENCE_REQUIRED_001": {
+      "cause": "Active compiler metadata is unavailable, cannot resolve the Smart Filters region contract, or exposes a generic plug-in attribute sink without the native settings inventory, even when its settings block is omitted.",
+      "deterministicFix": "Resolve native plug-in metadata or direct compiler evidence for the target APEX build and rerun validation. Missing native attribute inventory does not prove settings are unsupported. Do not delete required settings or copy settings from ticket prose or templates without compiler evidence.",
+      "owningGuidance": ["references/policies/memory-bank/00-guard/ai.guard.md", "templates/region-components/smart-filter-search/smart-filter-search._common.md"]
+    },
+    "SMART_FILTER_SETTINGS_VALUE_REQUIRED_001": {
+      "cause": "One or more compiler-supported Smart Filters settings are missing, use the wrong AUX-2682 value, or violate the total-row-count label condition.",
+      "deterministicFix": "For properties exposed by the target compiler, set maxSuggestionChips to 100, moreFiltersSuggestionChip to true, compactNosThreshold to 10000, and showTotalRowCount explicitly. Set totalRowCountLabel to Results only when showTotalRowCount is true; omit it when false.",
+      "owningGuidance": ["references/policies/memory-bank/30-pages/apex.smart-filter-search.md", "templates/region-components/smart-filter-search/smart-filter-search._common.md"]
+    },
+    "SMART_FILTER_SEARCH_BEHAVIOR_CONTRACT_REQUIRED_001": {
+      "cause": "The Smart Filter Generation Plan does not fully freeze matching semantics, length bounds, tokenization behavior, or compiler representation evidence.",
+      "deterministicFix": "Select exactly one of contains, starts, or exact; set positive min_chars and max_len with max_len greater than or equal to min_chars; define trimming, repeated whitespace, punctuation boundaries, case normalization, accent normalization, duplicate tokens, and token order; then record property-level compiler evidence. Stop with Missing Inputs when the target compiler cannot represent the selected behavior.",
       "owningGuidance": ["references/policies/memory-bank/30-pages/apex.smart-filter-search.md", "templates/region-components/smart-filter-search/smart-filter-search._common.md"]
     },
     "SMART_FILTER_SEARCH_SOURCE_REQUIRED_001": {
       "cause": "Smart Filters search source or filtered columns are missing.",
-      "deterministicFix": "Define the source database columns/search configuration and align them with the target results region source.",
+      "deterministicFix": "Add at least one type: search filter with a non-empty explicit source.dbColumns allowlist; do not use source.databaseColumn for free-text Smart Filter Search.",
       "owningGuidance": ["references/policies/memory-bank/30-pages/apex.smart-filter-search.md"]
+    },
+    "SMART_FILTER_SEARCHABLE_COLUMNS_BASE_PROJECTION_REQUIRED_001": {
+      "cause": "Smart Filters searchable columns cannot be proven in the targeted base-region projection.",
+      "deterministicFix": "Use an explicit, provable base projection and remove every source.dbColumns entry not projected by that exact base source; do not widen or rewrite canonical SQL automatically.",
+      "owningGuidance": ["references/policies/memory-bank/30-pages/apex.smart-filter-search.md"]
+    },
+    "SMART_FILTER_SECURITY_SCOPE_MATCH_REQUIRED_001": {
+      "cause": "The Smart Filters region, its filtered base region, or a refinement child has a different effective authorization scheme or server-side condition.",
+      "deterministicFix": "Make the Smart Filters region and filtered base region inherit or declare the same authorizationScheme and exact serverSideCondition. Remove a refinement-specific override or make it exactly match that shared scope.",
+      "owningGuidance": ["references/policies/memory-bank/30-pages/apex.smart-filter-search.md", "references/policies/memory-bank/40-components/apex.region-interactions.md"]
+    },
+    "SMART_FILTER_REFINEMENT_SOURCE_SCOPE_REQUIRED_001": {
+      "cause": "A Smart Filter refinement column is outside the filtered base projection or its LOV/suggestion source can query an independent dataset.",
+      "deterministicFix": "Use one explicit source.databaseColumn projected by the filtered base region. Use lov.type distinctValues or static authored values and dynamic base-derived or static authored suggestions; remove shared, SQL-query, and function-body data sources.",
+      "owningGuidance": ["references/policies/memory-bank/30-pages/apex.smart-filter-search.md", "templates/region-components/smart-filter-search/smart-filter-search._common.md"]
+    },
+    "SMART_FILTER_PERFORMANCE_READINESS_REQUIRED_001": {
+      "cause": "Smart Filter performance readiness is claimed without complete index strategy, optimizer-statistics status, and expected-cardinality evidence.",
+      "deterministicFix": "Record expected cardinality and current statistics status, then document a compatible index/search strategy for every searchable attribute and selected match semantic. For contains matching, prove a text/function-based strategy or explicitly accept and review the scan cost.",
+      "owningGuidance": ["references/policies/memory-bank/30-pages/apex.smart-filter-search.md", "templates/region-components/smart-filter-search/smart-filter-search._common.md"]
+    },
+    "SMART_FILTER_ACCESSIBILITY_GUIDANCE_REQUIRED_001": {
+      "cause": "A Smart Filter child lacks a concise visible label or useful help/comments guidance, or its Generation Plan omits the accessibility acceptance boundary.",
+      "deterministicFix": "Add a concise label and behavior-specific help or comments to every search/refinement child, then record the supported search landmark/focus-order decision in the Smart Filter Generation Plan.",
+      "owningGuidance": ["references/policies/memory-bank/30-pages/apex.smart-filter-search.md", "templates/region-components/smart-filter-search/smart-filter-search._common.md"]
+    },
+    "SMART_FILTER_RUNTIME_ACCEPTANCE_REQUIRED_001": {
+      "cause": "The Smart Filter Generation Plan does not prove refresh without a page reload and filtered export behavior.",
+      "deterministicFix": "Record runtime acceptance evidence that native Smart Filter changes refresh the authoritative results region without a full page reload and that CSV/PDF/download exports honor the active security scope and filters.",
+      "owningGuidance": ["references/policies/memory-bank/30-pages/apex.smart-filter-search.md", "references/policies/memory-bank/40-components/apex.region-interactions.md"]
     },
     "SQL_INLINE_BLOCK_001": {
       "cause": "Inline SQL body exceeds the APEX artifact size gate.",
@@ -493,6 +783,71 @@
       "cause": "A templateOptions entry uses a stale static ID or CSS token rejected by the live compiler/theme contract.",
       "deterministicFix": "Replace the stale value with the live-valid emitted value, such as js-dialog-class-t-Drawer--pullOutEnd for drawer end/right, or standalone #DEFAULT# for title-bar breadcrumbs.",
       "owningGuidance": ["references/policies/memory-bank/40-components/apex.templates.md"]
+    },
+    "TIMELINE_AVATAR_BLOCK_REQUIRED_001": {
+      "cause": "Timeline settings.displayAvatar and the nested plugin-avatar block are inconsistent.",
+      "deterministicFix": "When displayAvatar is true, add plugin-avatar with type, shape, and exactly one matching payload. When Avatar display is omitted or false, remove plugin-avatar.",
+      "owningGuidance": ["references/domains/template-components/timeline.md"]
+    },
+    "TIMELINE_AVATAR_PAYLOAD_REQUIRED_001": {
+      "cause": "A Timeline plugin-avatar omits the payload selected by type or mixes icon, image, and initials payloads.",
+      "deterministicFix": "Choose exactly one Timeline Avatar type—icon, image, or initials—emit only its matching payload, and remove the other payload properties.",
+      "owningGuidance": ["references/domains/template-components/timeline.md"]
+    },
+    "TIMELINE_BADGE_BLOCK_REQUIRED_001": {
+      "cause": "Timeline settings.displayBadge and the nested plugin-badge block are inconsistent.",
+      "deterministicFix": "When displayBadge is true, add plugin-badge with label and value. When Badge display is omitted or false, remove plugin-badge.",
+      "owningGuidance": ["references/domains/template-components/timeline.md"]
+    },
+    "COMMENTS_AVATAR_BLOCK_REQUIRED_001": {
+      "cause": "Comments settings.displayAvatar and the nested plugin-avatar block are inconsistent.",
+      "deterministicFix": "When displayAvatar is true, add plugin-avatar with type, shape, and exactly one matching payload. When Avatar display is omitted or false, remove plugin-avatar.",
+      "owningGuidance": ["references/domains/template-components/comments.md"]
+    },
+    "COMMENTS_AVATAR_PAYLOAD_REQUIRED_001": {
+      "cause": "A Comments plugin-avatar omits the payload selected by type or mixes icon, image, and initials payloads.",
+      "deterministicFix": "Choose exactly one Comments Avatar type—icon, image, or initials—emit only its matching payload, and remove the other payload properties.",
+      "owningGuidance": ["references/domains/template-components/comments.md"]
+    },
+    "COMMENTS_AVATAR_INITIALS_COLUMN_REQUIRED_001": {
+      "cause": "A Comments initials Avatar does not reference a declared uppercase varchar2 child column.",
+      "deterministicFix": "Project a dedicated initials value, declare its uppercase child column with dataType: varchar2, and map plugin-avatar.initials directly to that column identifier.",
+      "owningGuidance": ["references/domains/template-components/comments.md"]
+    },
+    "COMMENTS_TASKS_INITIALS_UNAVAILABLE_001": {
+      "cause": "A Comments initials Avatar maps INITIALS from sampleData: tasks, but the target runtime does not expose that column.",
+      "deterministicFix": "Replace the Tasks sample source for this initials permutation with a verified SQL source that projects a dedicated varchar2 AVATAR_INITIALS column, or omit the initials permutation.",
+      "owningGuidance": ["references/domains/template-components/comments.md"]
+    },
+    "COMMENTS_PARTIAL_SINGLE_ROW_REQUIRED_001": {
+      "cause": "A partial Comments component uses a source whose one-row cardinality is not locally proven.",
+      "deterministicFix": "Use a verified SQL source with an explicit fetch first 1 row only or rownum one-row bound, or change componentAppearance.display to report.",
+      "owningGuidance": ["references/domains/template-components/comments.md"]
+    },
+    "COMMENTS_PARTIAL_REPORT_BLOCK_FORBIDDEN_001": {
+      "cause": "A partial Comments component defines one or more report-only behavior blocks.",
+      "deterministicFix": "Remove rowSelection, performance, pagination, entityTitle, messages, and advanced from partial Comments, or change componentAppearance.display to report when report behavior is required.",
+      "owningGuidance": ["references/domains/template-components/comments.md"]
+    },
+    "COMMENTS_DISPLAY_STYLE_CONTRACT_001": {
+      "cause": "The Comments style setting does not match the compiler-backed display mode.",
+      "deterministicFix": "Remove settings.style from partial Comments, or add style: basic or style: chatSpeechBubbles to report Comments.",
+      "owningGuidance": ["references/domains/template-components/comments.md"]
+    },
+    "COMMENTS_RENDERING_VALUE_SAFE_REQUIRED_001": {
+      "cause": "Comments attributes or commentClass contains scriptable markup, handlers, URL schemes, substitutions, or an unproven dynamic CSS mapping.",
+      "deterministicFix": "Remove scriptable content. Use safe static attributes text and static CSS tokens, or map commentClass directly to a declared varchar2 child column.",
+      "owningGuidance": ["references/domains/template-components/comments.md"]
+    },
+    "COMMENTS_MAPPING_REQUIRED_001": {
+      "cause": "A Comments userName, commentText, or date mapping does not resolve to a declared child column.",
+      "deterministicFix": "Project the source value, declare its uppercase Comments child column, and map settings.userName, settings.commentText, or settings.date directly to that column identifier.",
+      "owningGuidance": ["references/domains/template-components/comments.md"]
+    },
+    "COMMENTS_REPORT_OPTION_REQUIRED_001": {
+      "cause": "A Comments report option contains a value outside the compiler-supported contract.",
+      "deterministicFix": "Omit rowSelection for no selection, or use focusOnly, singleSelection, or multipleSelection when selection is requested; use pagination.type: page and a positive integer for pagination.entitiesPerPage.",
+      "owningGuidance": ["references/domains/template-components/comments.md"]
     },
     "THEME_BASE_THEME_REQUIRED_001": {
       "cause": "Universal Theme definition omits baseTheme.",

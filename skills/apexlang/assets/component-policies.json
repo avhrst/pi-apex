@@ -292,21 +292,30 @@
     },
     {
       "id": "REGION_RULE_006",
-      "scope": "region.metricChart.interactions",
-      "whenAny": [
-        {
-          "regionType": "Metric Card"
-        },
-        {
-          "regionType": "Chart"
-        }
-      ],
+      "scope": "region.chart.interactions",
+      "when": {
+        "regionType": "Chart"
+      },
       "forbid": [
         "links",
         "actions"
       ],
       "severity": "error",
-      "message": "Metric Card and Chart regions must not own links or actions; model navigation through adjacent components."
+      "message": "Chart regions must not own links or actions; model navigation through adjacent components."
+    },
+    {
+      "id": "REGION_RULE_019",
+      "scope": "region.metricCard.interactions",
+      "when": {
+        "regionType": "Metric Card"
+      },
+      "requireValues": {
+        "actions.position": [
+          "link"
+        ]
+      },
+      "severity": "error",
+      "message": "Metric Card row actions use the compiler-backed link position and do not use action templates."
     },
     {
       "id": "REGION_RULE_007",

@@ -1,6 +1,6 @@
 ---
 name: page-items
-description: Configure Oracle APEX page items the Items skill. Use when Codex must add or adjust page items under Apex Developer guardrails.
+description: Configure Oracle APEX page items the Items skill. Use when Codex must add or adjust page items under APEX Developer guardrails.
 ---
 
 # Reference Package — Page Items & LOVs
@@ -51,7 +51,7 @@ description: Configure Oracle APEX page items the Items skill. Use when Codex mu
 
 ## Agent Flow
 - Invoke `references/ops/sqlcl-agents/00-connection-gate.md` when DB validation is needed.
-- Use the internal generate -> review -> fix loop via Apex Developer agents, referencing business-logic prompts when computations/validations are involved.
+- Use the internal generate -> review -> fix loop via APEX Developer agents, referencing business-logic prompts when computations/validations are involved.
 - For import-ready runs, execute `references/ops/runtime-gates/02-direct-sqlcl-validate-gate.md`.
 - After runtime gate pass, import via `references/ops/runtime-gates/01-direct-sqlcl-import.md` proceeds automatically.
 
@@ -65,4 +65,4 @@ description: Configure Oracle APEX page items the Items skill. Use when Codex mu
 - `references/domains/page-components/page-items/registry.md` (keyword → template mapping)
 - `references/domains/README.md` for validations/computations/dynamic actions
 
-Use this package for any page item, LOV, validation, or computation tasks within Apex Developer.
+Use this package for any page item, LOV, validation, or computation tasks within APEX Developer.

@@ -18,6 +18,88 @@
   },
   "components": [
     {
+      "name": "cards",
+      "target_type": "page",
+      "synonyms": [
+        "visual summary",
+        "people cards",
+        "person cards",
+        "product cards",
+        "status cards",
+        "status tiles",
+        "entity cards",
+        "cards region",
+        "cards",
+        "dynamic cards refresh",
+        "cards refresh on change"
+      ],
+      "rules": [
+        "10-global/apex.global.md",
+        "30-pages/apex.cards-page.md",
+        "40-components/apex.region-data-source.md",
+        "40-components/apex.region-interactions.md",
+        "40-components/apex.region-media.md"
+      ],
+      "templates": [
+        "templates/region-components/cards/cards._index.md",
+        "templates/region-components/cards/cards._common.md"
+      ],
+      "conditionalTemplates": [
+        {
+          "keywords": [
+            "sql",
+            "sql query",
+            "sql source",
+            "sql-backed",
+            "local database"
+          ],
+          "templates": [
+            "templates/region-components/cards/cards.standard.md"
+          ]
+        },
+        {
+          "keywords": [
+            "rest",
+            "rest source",
+            "rest data source"
+          ],
+          "templates": [
+            "templates/region-components/cards/cards.rest-source.md"
+          ]
+        },
+        {
+          "keywords": [
+            "refresh on change",
+            "refresh when",
+            "cards refresh on change"
+          ],
+          "templates": [
+            "templates/region-components/cards/cards.refresh-on-change.md"
+          ]
+        },
+        {
+          "keywords": [
+            "refresh after dialog",
+            "dialog closes",
+            "dialog close refresh"
+          ],
+          "templates": [
+            "templates/region-components/cards/cards.refresh-after-dialog.md"
+          ]
+        }
+      ],
+      "requires": [
+        "SQL query or REST Data Source",
+        "title mapping",
+        "optional: subtitle, body, icon, media, badge, action, refresh, fixed grid columns"
+      ],
+      "excludes": [
+        "interactive-grid",
+        "da-refresh-region-on-change",
+        "da-refresh-region-after-dialog"
+      ]
+    },
+    {
       "target_type": "item",
       "rules": [
         "40-components/apex.items.md"
@@ -285,12 +367,63 @@
         "templates/region-components/classic-report/classic-report._common.md",
         "templates/page-examples/classic-report-page/classic-report-page._index.md"
       ],
+      "conditionalTemplates": [
+        {
+          "keywords": [
+            "media list",
+            "media-list",
+            "@/media-list"
+          ],
+          "templates": [
+            "templates/region-components/classic-report/classic-report._common.md"
+          ]
+        }
+      ],
       "requires": [
         "db_connection_name",
         "source object (table or view)",
         "columns",
         "sort column (order by)",
         "sql or table"
+      ]
+    },
+    {
+      "name": "standalone-avatar",
+      "synonyms": [
+        "standalone avatar",
+        "standalone avatar region",
+        "avatar region",
+        "avatar report",
+        "avatar report region",
+        "avatar template component",
+        "theme template component avatar",
+        "themetemplatecomponent avatar"
+      ],
+      "target_type": "page",
+      "excludes": [
+        "classic-report",
+        "interactive-report"
+      ],
+      "rules": [
+        "10-global/apex.global.md",
+        "20-data/apex.sql.md",
+        "40-components/apex.templates.md",
+        "40-components/apex.region-data-source.md"
+      ],
+      "templates": [
+        "templates/template-components/avatar/avatar._common.md",
+        "templates/template-components/avatar/avatar._index.md",
+        "templates/template-components/avatar/avatar.report-initials.md",
+        "templates/template-components/avatar/avatar.report-icon.md",
+        "templates/template-components/avatar/avatar.report-image-url-column.md"
+      ],
+      "requires": [
+        "source object or SQL query",
+        "named projected columns using uppercase snake_case identifiers, source.databaseColumn, and source.dataType",
+        "direct initials source-column identifier without ampersand substitution syntax",
+        "deterministic order by",
+        "avatar type: initials, icon, or URL-column image",
+        "existing authorization scheme when access is restricted"
       ]
     },
     {
@@ -335,8 +468,9 @@
       "synonyms": [
         "list region",
         "list",
-        "media list",
-        "card list"
+        "card list",
+        "list-region",
+        "list template"
       ],
       "rules": [
         "30-pages/apex.page.md",
@@ -345,6 +479,18 @@
       "templates": [
         "templates/region-components/list/list._index.md",
         "templates/region-components/list/list._common.md"
+      ],
+      "conditionalTemplates": [
+        {
+          "keywords": [
+            "media list template",
+            "@/media-list",
+            "list-region media list"
+          ],
+          "templates": [
+            "templates/region-components/list/list.media-list.md"
+          ]
+        }
       ],
       "requires": [
         "source.listReference (shared list alias)",
@@ -356,10 +502,15 @@
       "target_type": "page",
       "synonyms": [
         "metric card",
+        "metric cards",
         "metric-card",
+        "metric card region",
+        "metric card template component",
         "kpi card",
+        "kpi cards",
         "kpi",
-        "scorecard"
+        "scorecard",
+        "scorecards"
       ],
       "rules": [
         "30-pages/apex.page.md",
@@ -367,12 +518,826 @@
       ],
       "templates": [
         "templates/template-components/metric-card/metric-card._index.md",
-        "templates/template-components/metric-card/metric-card._common.md"
+        "templates/template-components/metric-card/metric-card._common.md",
+        "templates/template-components/metric-card/metric-card.report-minimal.md"
+      ],
+      "conditionalTemplates": [
+        {
+          "keywords": [
+            "partial metric card",
+            "single metric card partial",
+            "metric card partial mode"
+          ],
+          "templates": [
+            "templates/template-components/metric-card/metric-card.partial-minimal.md"
+          ]
+        },
+        {
+          "keywords": [
+            "metric card avatar",
+            "metric card badge",
+            "metric card avatar and badge",
+            "kpi avatar",
+            "kpi badge"
+          ],
+          "templates": [
+            "templates/template-components/metric-card/metric-card.report-avatar-badge.md"
+          ]
+        },
+        {
+          "keywords": [
+            "metric card link",
+            "metric card navigation",
+            "metric card drilldown",
+            "kpi navigation",
+            "kpi drilldown",
+            "row navigation"
+          ],
+          "templates": [
+            "templates/template-components/metric-card/metric-card.report-link.md"
+          ]
+        },
+        {
+          "keywords": [
+            "grouped metric card",
+            "grouped metric cards",
+            "metric card grouping",
+            "metric card selection",
+            "selectable metric card",
+            "selectable metric cards"
+          ],
+          "templates": [
+            "templates/template-components/metric-card/metric-card.report-grouping-selection.md"
+          ]
+        },
+        {
+          "keywords": [
+            "metric card permutations",
+            "metric card permutation app",
+            "metric card qa app",
+            "all metric card variants",
+            "all metric card combinations"
+          ],
+          "templates": [
+            "templates/template-components/metric-card/metric-card.permutations.md"
+          ]
+        }
       ],
       "requires": [
-        "settings.title (optional)",
-        "settings.metric (optional)"
+        "partial or report display mode, with report-only attributes omitted in partial mode",
+        "report source and projected columns when report mode is used",
+        "settings.metric (required)",
+        "settings.title and settings.meta (optional)",
+        "valid nested Avatar/Badge payloads and projected selector columns when requested",
+        "valid dependencies for requested grouping, selection, and link behavior",
+        "action target and existing authorization scheme when requested"
+      ],
+      "routing": {
+        "explicitSelectors": [
+          "kpi card",
+          "metric card",
+          "metric-card",
+          "metricCard",
+          "scorecard",
+          "themeTemplateComponent/metricCard"
+        ],
+        "defaultMode": "report",
+        "partialTriggers": [
+          "partial",
+          "partial mode",
+          "partial template"
+        ],
+        "featureSignals": {
+          "avatar": [
+            "avatar",
+            "icon"
+          ],
+          "badge": [
+            "badge"
+          ],
+          "grouping": [
+            "group",
+            "grouped",
+            "grouping"
+          ],
+          "link": [
+            "drilldown",
+            "link",
+            "navigation"
+          ],
+          "selection": [
+            "select",
+            "selectable",
+            "selection"
+          ]
+        },
+        "semanticSignalGroups": {
+          "aggregate-source": [
+            "aggregate",
+            "average",
+            "avg",
+            "count",
+            "number",
+            "numeric",
+            "query",
+            "sum",
+            "total"
+          ],
+          "card-context": [
+            "card",
+            "cards",
+            "counter",
+            "summary",
+            "tile",
+            "tiles"
+          ],
+          "metric-context": [
+            "kpi",
+            "measure",
+            "metric",
+            "metrics",
+            "scorecard"
+          ]
+        },
+        "requiredSemanticSignalGroups": [
+          "aggregate-source",
+          "card-context",
+          "metric-context"
+        ],
+        "suppresses": [
+          "avatar",
+          "badge",
+          "dashboard",
+          "interactive-report"
+        ],
+        "sourceAdapters": {
+          "partial": [
+            {
+              "adapter": "jsonDualityView",
+              "signals": [
+                "duality view",
+                "json duality view"
+              ]
+            },
+            {
+              "adapter": "jsonSource",
+              "signals": [
+                "json collection",
+                "json source"
+              ]
+            },
+            {
+              "adapter": "localDatabase",
+              "signals": [
+                "local database",
+                "sql query",
+                "table"
+              ]
+            },
+            {
+              "adapter": "restEnabledSql",
+              "signals": [
+                "remote sql",
+                "rest enabled sql"
+              ]
+            },
+            {
+              "adapter": "restSource",
+              "signals": [
+                "rest source",
+                "web source"
+              ]
+            },
+            {
+              "adapter": "sampleData",
+              "signals": [
+                "sample data"
+              ]
+            }
+          ],
+          "report": [
+            {
+              "adapter": "jsonDualityView",
+              "signals": [
+                "duality view",
+                "json duality view"
+              ]
+            },
+            {
+              "adapter": "jsonSource",
+              "signals": [
+                "json collection",
+                "json source"
+              ]
+            },
+            {
+              "adapter": "localDatabase",
+              "signals": [
+                "local database",
+                "sql query",
+                "table"
+              ]
+            },
+            {
+              "adapter": "restEnabledSql",
+              "signals": [
+                "remote sql",
+                "rest enabled sql"
+              ]
+            },
+            {
+              "adapter": "restSource",
+              "signals": [
+                "rest source",
+                "web source"
+              ]
+            },
+            {
+              "adapter": "sampleData",
+              "signals": [
+                "sample data"
+              ]
+            }
+          ]
+        },
+        "placement": {
+          "default": "topLevel",
+          "topLevelSlots": [
+            "body"
+          ],
+          "nestedRequiresExistingParent": true
+        }
+      }
+    },
+    {
+      "name": "timeline",
+      "target_type": "region",
+      "synonyms": [
+        "timeline template component",
+        "timeline component",
+        "timeline region",
+        "activity timeline",
+        "event timeline"
+      ],
+      "rules": [
+        "30-pages/apex.page.md",
+        "20-data/apex.sql.md",
+        "40-components/apex.templates.md"
+      ],
+      "templates": [
+        "templates/template-components/timeline/timeline._index.md",
+        "templates/template-components/timeline/timeline._common.md",
+        "templates/template-components/timeline/timeline.report-sample-data.md",
+        "templates/template-components/timeline/timeline.permutations.md",
+        "templates/template-components/timeline/timeline._template_options.md"
+      ],
+      "conditionalTemplates": [
+        {
+          "keywords": [
+            "avatar"
+          ],
+          "templates": [
+            "templates/template-components/avatar/avatar._template_options.md"
+          ]
+        },
+        {
+          "keywords": [
+            "badge"
+          ],
+          "templates": [
+            "templates/template-components/badge/badge._template_options.md"
+          ]
+        }
+      ],
+      "workflow": "references/domains/template-components/timeline.md",
+      "requires": [
+        "source object (table or view), or an explicit supported source mode",
+        "verified source columns for date, title, and userName",
+        "sql or table when using localDatabase",
+        "optional: description, avatar, or badge"
       ]
+    },
+    {
+      "name": "comments",
+      "target_type": "region",
+      "synonyms": [
+        "comments template component",
+        "comments component",
+        "comments region",
+        "comment feed",
+        "comments actions",
+        "comments action",
+        "comments grouping",
+        "grouped comments",
+        "comment grouping",
+        "comments column",
+        "comments interactive report column",
+        "comments ir column",
+        "partial comments column"
+      ],
+      "rules": [
+        "30-pages/apex.page.md",
+        "20-data/apex.sql.md",
+        "40-components/apex.templates.md"
+      ],
+      "templates": [
+        "templates/template-components/comments/comments._index.md",
+        "templates/template-components/comments/comments._common.md",
+        "templates/template-components/comments/comments.apex-task-comments.md"
+      ],
+      "conditionalTemplates": [
+        {
+          "keywords": [
+            "avatar",
+            "author icon",
+            "author initials",
+            "chat",
+            "icon avatar",
+            "image",
+            "image avatar",
+            "initials",
+            "initials avatar",
+            "no shape",
+            "partial",
+            "partial comment",
+            "partial comments",
+            "profile image",
+            "profile picture",
+            "rounded avatar",
+            "square avatar",
+            "user icon",
+            "user initials"
+          ],
+          "templates": [
+            "templates/template-components/comments/comments.permutations.md"
+          ]
+        },
+        {
+          "keywords": [
+            "comments column",
+            "comments interactive report column",
+            "comments ir column",
+            "partial comments column"
+          ],
+          "templates": [
+            "templates/template-components/comments/comments.partial-column.md"
+          ]
+        },
+        {
+          "keywords": [
+            "advanced",
+            "alignment",
+            "attributes",
+            "entity title",
+            "lazy loading",
+            "messages",
+            "pagination",
+            "row selection",
+            "settings",
+            "style",
+            "template options",
+            "theme colors"
+          ],
+          "templates": [
+            "templates/template-components/comments/comments._template_options.md"
+          ]
+        },
+        {
+          "keywords": [
+            "avatar",
+            "author icon",
+            "author initials",
+            "icon avatar",
+            "image",
+            "initials",
+            "no shape",
+            "profile image",
+            "profile picture",
+            "rounded avatar",
+            "user icon",
+            "user initials"
+          ],
+          "templates": [
+            "templates/template-components/avatar/avatar._template_options.md"
+          ]
+        }
+      ],
+      "workflow": "references/domains/template-components/comments.md",
+      "requires": [
+        "verified comment text and user name mappings",
+        "style mapping when display: report",
+        "sql or table when using localDatabase",
+        "optional: date and avatar mappings"
+      ]
+    },
+    {
+      "name": "badge",
+      "target_type": "page",
+      "synonyms": [
+        "badge template component",
+        "badge region",
+        "standalone badge",
+        "themeTemplateComponent/badge"
+      ],
+      "rules": [
+        "20-data/apex.sql.md",
+        "30-pages/apex.page.md",
+        "40-components/apex.region-data-source.md",
+        "40-components/apex.region-interactions.md",
+        "40-components/apex.templates.md"
+      ],
+      "templates": [
+        "templates/template-components/badge/badge._index.md",
+        "templates/template-components/badge/badge._common.md",
+        "templates/template-components/badge/badge.report-minimal.md",
+        "templates/template-components/badge/badge.report-link.md",
+        "templates/template-components/badge/badge._template_options.md"
+      ],
+      "requires": [
+        "verified data source",
+        "label",
+        "value column",
+        "explicit source columns",
+        "optional: allowlisted state",
+        "optional: resolved link target",
+        "optional: verified authorization scheme"
+      ]
+    },
+    {
+      "name": "media-list",
+      "target_type": "page",
+      "synonyms": [
+        "media list template component",
+        "media list region",
+        "standalone media list",
+        "theme template component media list",
+        "themeTemplateComponent/mediaList"
+      ],
+      "excludes": [
+        "list-region"
+      ],
+      "rules": [
+        "references/policies/memory-bank/10-global/apex.global.md",
+        "references/policies/memory-bank/20-data/apex.sql.md",
+        "references/policies/memory-bank/30-pages/apex.page.md",
+        "references/policies/memory-bank/40-components/apex.region-data-source.md",
+        "references/policies/memory-bank/40-components/apex.region-interactions.md",
+        "references/policies/memory-bank/40-components/apex.templates.md"
+      ],
+      "templates": [
+        "templates/template-components/media-list/media-list._common.md",
+        "templates/template-components/media-list/media-list.report-base.md"
+      ],
+      "conditionalTemplates": [
+        {
+          "keywords": [
+            "partial",
+            "single item"
+          ],
+          "templates": [
+            "templates/template-components/media-list/media-list.partial.md"
+          ]
+        },
+        {
+          "keywords": [
+            "avatar",
+            "initials",
+            "user initials",
+            "profile picture",
+            "profile pictures",
+            "profile image"
+          ],
+          "templates": [
+            "templates/template-components/media-list/media-list.report-avatar-badge.md",
+            "templates/template-components/avatar/avatar._template_options.md"
+          ],
+          "featureSignals": [
+            "avatar",
+            "image"
+          ]
+        },
+        {
+          "keywords": [
+            "badge",
+            "status indicator",
+            "status indicators",
+            "status value"
+          ],
+          "templates": [
+            "templates/template-components/media-list/media-list.report-avatar-badge.md",
+            "templates/template-components/badge/badge._template_options.md"
+          ],
+          "featureSignals": [
+            "badge"
+          ]
+        },
+        {
+          "keywords": [
+            "link",
+            "navigation",
+            "action"
+          ],
+          "templates": [
+            "templates/template-components/media-list/media-list.report-link.md"
+          ],
+          "featureSignals": [
+            "link"
+          ]
+        },
+        {
+          "keywords": [
+            "group",
+            "grouping",
+            "grouped"
+          ],
+          "templates": [
+            "templates/template-components/media-list/media-list.report-grouped.md"
+          ],
+          "featureSignals": [
+            "grouping"
+          ]
+        },
+        {
+          "keywords": [
+            "layout",
+            "responsive",
+            "grid",
+            "horizontal"
+          ],
+          "templates": [
+            "templates/template-components/media-list/media-list.report-layouts.md"
+          ],
+          "featureSignals": [
+            "layout"
+          ]
+        }
+      ],
+      "requires": [
+        "target-build-resolved report-column contract",
+        "verified source for report mode",
+        "title source column",
+        "deterministic order by for report mode",
+        "optional: Avatar, Badge, grouping, link action, and explicit layout only when exposed by the active target-build contract"
+      ],
+      "routing": {
+        "owner": "media-list",
+        "selectorGroups": {
+          "direct": [
+            "themeTemplateComponent/mediaList",
+            "Media List template component"
+          ],
+          "list-region": [
+            "list region",
+            "list-region",
+            "shared list"
+          ],
+          "classic-report": [
+            "classic report",
+            "classic report region",
+            "report template"
+          ]
+        },
+        "fallbackSelectorGroups": {
+          "list-region": [
+            "list template"
+          ]
+        },
+        "precedence": [
+          "direct",
+          "list-region",
+          "classic-report"
+        ],
+        "selectorWeights": {
+          "direct": 2,
+          "classic-report": 1,
+          "list-region": 0.5
+        },
+        "competingOrder": [
+          "cards",
+          "content-row",
+          "timeline",
+          "classic-report",
+          "interactive-report"
+        ],
+        "suppressedCandidates": {
+          "media-list": [
+            "list-region"
+          ],
+          "list-region": [
+            "media-list"
+          ],
+          "classic-report": [
+            "list-region",
+            "media-list"
+          ]
+        },
+        "aliases": [
+          "media list",
+          "media-list",
+          "themeTemplateComponent/mediaList",
+          "Media List template component"
+        ],
+        "semanticFallback": {
+          "requiredSignalGroups": [
+            "collection",
+            "compact",
+            "media"
+          ],
+          "requireRowEvidence": true
+        },
+        "mode": {
+          "default": "report",
+          "partialSignals": [
+            "partial",
+            "single item",
+            "one item",
+            "current item",
+            "individual item"
+          ]
+        },
+        "signalGroups": {
+          "collection": [
+            "list",
+            "feed",
+            "directory",
+            "rows",
+            "items",
+            "entries",
+            "records",
+            "results"
+          ],
+          "compact": [
+            "compact",
+            "scannable",
+            "recent",
+            "activity",
+            "people"
+          ],
+          "media": [
+            "image",
+            "images",
+            "thumbnail",
+            "thumbnails",
+            "avatar",
+            "avatars",
+            "profile picture",
+            "profile pictures",
+            "icon",
+            "icons",
+            "badge",
+            "badges",
+            "status",
+            "statuses",
+            "status indicator",
+            "status indicators"
+          ]
+        },
+        "rowEvidence": [
+          "list",
+          "feed",
+          "directory",
+          "row",
+          "rows",
+          "item",
+          "items",
+          "entry",
+          "entries",
+          "record",
+          "records",
+          "result",
+          "results"
+        ],
+        "competingSignals": {
+          "cards": [
+            "card",
+            "cards",
+            "cards region"
+          ],
+          "content-row": [
+            "content row",
+            "content rows",
+            "content-row"
+          ],
+          "timeline": [
+            "timeline",
+            "activity timeline",
+            "event timeline"
+          ],
+          "classic-report": [
+            "classic report",
+            "classic report region",
+            "report template"
+          ],
+          "interactive-report": [
+            "interactive report",
+            "interactive report region",
+            "interactive data table"
+          ],
+          "list-region": [
+            "list region",
+            "list-region",
+            "shared list",
+            "list template",
+            "@/media-list"
+          ]
+        },
+        "featureSignals": {
+          "avatar": [
+            "avatar",
+            "avatars",
+            "initials",
+            "profile image",
+            "profile images",
+            "profile picture",
+            "profile pictures"
+          ],
+          "badge": [
+            "badge",
+            "badges",
+            "status",
+            "status indicator",
+            "status indicators",
+            "status value",
+            "statuses"
+          ],
+          "grouping": [
+            "group",
+            "grouped",
+            "grouping",
+            "groups"
+          ],
+          "image": [
+            "icon",
+            "icons",
+            "image",
+            "images",
+            "thumbnail",
+            "thumbnails"
+          ],
+          "layout": [
+            "grid",
+            "horizontal",
+            "layout",
+            "responsive",
+            "three column",
+            "two column"
+          ],
+          "link": [
+            "action",
+            "actions",
+            "link",
+            "links",
+            "navigate",
+            "navigation"
+          ]
+        },
+        "sourceAdapters": {
+          "partial": [
+            {
+              "adapter": "sessionState",
+              "signals": [
+                "partial",
+                "session state"
+              ]
+            }
+          ],
+          "report": [
+            {
+              "adapter": "localDatabase/sqlQuery",
+              "signals": [
+                "local database",
+                "sql query"
+              ]
+            }
+          ]
+        },
+        "unsupportedFeatures": [
+          "grouping"
+        ],
+        "placement": {
+          "topLevel": {
+            "slot": "body"
+          },
+          "nested": {
+            "requiresParentRegion": true,
+            "defaultSlot": "regionBody",
+            "parentTemplates": {
+              "@/standard": [
+                "regionBody",
+                "subRegions"
+              ],
+              "@/content-block": [
+                "regionBody",
+                "subRegions"
+              ]
+            }
+          }
+        },
+        "semanticSupport": [
+          "references/policies/memory-bank/40-components/apex.region-contracts.md",
+          "templates/template-components/content-row/content-row._common.md"
+        ]
+      }
     },
     {
       "name": "chart-area",
@@ -647,8 +1612,6 @@
       "name": "dashboard",
       "synonyms": [
         "analytics summary",
-        "cards",
-        "cards region",
         "dashboard",
         "dashboard page",
         "dashboard region",
@@ -662,12 +1625,9 @@
         "metrics",
         "metrics dashboard",
         "overview",
-        "summary",
         "summary dashboard",
-        "summary page",
-        "tile",
         "tile dashboard",
-        "tiles"
+        "dashboard tiles"
       ],
       "target_type": "dashboard",
       "rules": [
@@ -720,7 +1680,9 @@
     {
       "target_type": "page",
       "rules": [
-        "30-pages/apex.page.md"
+        "30-pages/apex.page.md",
+        "40-components/apex.region-interactions.md",
+        "40-components/apex.templates.md"
       ],
       "name": "calendar",
       "synonyms": [
@@ -990,11 +1952,31 @@
         "toggle multiple regions"
       ],
       "templates": [
+        "templates/region-components/region-display-selector/region-display-selector._index.md",
         "templates/region-components/region-display-selector/region-display-selector._common.md",
-        "templates/region-components/region-display-selector/region-display-selector.standard.md"
+        "templates/region-components/region-display-selector/region-display-selector.standard.md",
+        "templates/region-components/region-display-selector/region-display-selector.permutations.md"
+      ],
+      "workflow": "references/domains/page-components/regions/region-display-selector/workflow-region-display-selector.md",
+      "applicationSettings": [
+        {
+          "scope": "application",
+          "selector": "NATIVE_DISPLAY_SELECTOR",
+          "type": "region",
+          "name": "regionDisplaySelector",
+          "attribute": "includeSlider",
+          "path": "settings.attributes.includeSlider",
+          "contract": "assets/component-attributes.json#components.region.regionDisplaySelector.applicationSettings",
+          "optional": true
+        }
       ],
       "requires": [
-        "toggled regions list"
+        "page target",
+        "at least two explicitly controlled sibling regions",
+        "mode: viewSingleRegion or scrollWindow",
+        "display region icons choice",
+        "Show All choice for viewSingleRegion",
+        "remember selection: byUser, bySession, or false"
       ]
     },
     {
@@ -1021,7 +2003,8 @@
     {
       "target_type": "page",
       "rules": [
-        "30-pages/apex.page.md"
+        "30-pages/apex.page.md",
+        "30-pages/apex.smart-filter-search.md"
       ],
       "name": "smart-filters-region",
       "synonyms": [
@@ -1076,6 +2059,8 @@
       "synonyms": [
         "auto refresh region",
         "dynamic action refresh",
+        "dynamic cards refresh",
+        "cards refresh on change",
         "filter refresh",
         "refresh after filter",
         "refresh on change",

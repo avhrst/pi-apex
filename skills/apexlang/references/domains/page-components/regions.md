@@ -20,6 +20,7 @@ This skill orchestrates the Tier 1 region workflows under `skills/` (interactive
 - `references/domains/page-components/regions/interactive-report/workflow-interactive-report.md`
 - `references/domains/page-components/regions/dashboard/workflow-dashboard.md`
 - `references/domains/page-components/regions/chart/workflow-charts.md`
+- `references/domains/page-components/regions/region-display-selector/workflow-region-display-selector.md`
 - `references/domains/business-logic/dynamic-actions/workflow-dynamic-actions.md`
 - `references/domains/business-logic/dynamic-actions/workflow-dynamic-actions-batch.md`
 - `references/domains/page-components/buttons/workflow-button-batch.md`

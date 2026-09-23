@@ -4,9 +4,13 @@
 Defines reusable APEXlang region interaction contracts for links, actions, filters, contextual regions, parent-child layout, and comments.
 
 ## Interaction and Action Constraints
-- Metric Card and Chart regions do not own links or actions; use adjacent cards, reports, buttons, or list entries for navigation.
+- Chart regions do not own links or actions; use adjacent cards, reports, buttons, or list entries for navigation.
+- Metric Card supports one row-level action position, `link`. Use a declarative behavior target, deterministic action sequence, projected row mappings, and no action template or label.
+- Metric Card `redirectThisApp` and `redirectOtherApp` link behaviors require `target`; `redirectUrl` requires a reviewed safe `targetUrl`; `triggerAction` emits neither target property and requires a matching event consumer. Reject dangerous URL schemes, protocol-relative or wholly dynamic destinations, substitutions outside query parameters, inline handlers, URL overrides in `linkAttributes`, and unsafe new-window attributes. The URL scheme, host, path, and fragment must remain static.
+- Metric Card grouping requires grouped child-column metadata plus deterministic static ordering; native single/multiple selection requires correctly typed same-page selection items and a primary-key child column.
 - Cards `fullCard` links must not emit a label; Cards `button` links must emit a concise label.
-- Native Cards actions are row navigation actions using `label` plus declarative `behavior.target`; do not emit `position` or attach processes directly to Cards actions.
+- Native Cards actions are row navigation or decision actions using explicit `layout.sequence`; `button` actions use `label`, `layout.position`, and optional native `appearance`, while full-card/title/subtitle/media actions omit button-only fields. Use declarative `behavior.target` for redirects, and use a nested `triggerAction` child only with `behavior.type: triggerAction`, omitting navigation targets.
+- When full-card navigation and a decision button coexist, document the intended precedence and evidence-backed conditions in the UX contract. Do not infer mutually exclusive business conditions from the action set.
 - List regions are navigation-only; they bind to shared list entries and must not emit data sources, filters, hidden page items, columns, links, or actions.
 - Management and launcher hub shared list entries should include `icon.imageIconCssClasses` with a conservative `fa-*` token and `userDefinedAttributes { 1: ... }` description text so media-list hubs render as scannable launch cards.
 - Report drilldown should be modeled as report/column links or region-level links, not as unsupported report actions.
@@ -16,6 +20,9 @@ Defines reusable APEXlang region interaction contracts for links, actions, filte
 - Filter item names are page item tokens, not labels. Derive them from page number and database column: `P{page}_F_{UPPER_DB_COLUMN}`.
 - Range filters use the same single canonical filter name as the database column; do not create `_FROM` and `_TO` item pairs for one range filter.
 - Smart Filters search item token defaults to `P{page}_F_SEARCH`; avoid legacy `P{page}_SEARCH` for generated search items.
+- A Smart Filters region must bind to exactly one APEX 24.2 Classic Report, Cards, Map, or Calendar base region through its explicit static id; sibling visualizations are not additional filter targets.
+- Smart Filter search, suggestion, refinement, and count behavior must stay within the base region's effective authorization, server-side condition, and security-trimmed dataset.
+- Treat `source.dbColumns` as an explicit searchable-attribute allowlist, not as permission to expose every base projection column.
 - Filter item names must not collide with same-page hidden items or form page item names; suffix deterministically only when there is a real collision.
 
 ## Contextual and Parent-Child Layout

@@ -92,7 +92,7 @@ Canonical packaged entrypoint for APEXlang domain guidance.
 
 ### Agent Flow
 - Invoke `references/ops/sqlcl-agents/00-connection-gate.md` if server-side validation or invokeApi conversions require DB context.
-- Coordinate the internal generate -> review -> fix loop via Apex Developer master agents.
+- Coordinate the internal generate -> review -> fix loop via APEX Developer master agents.
 - For import-ready runs, execute `references/ops/runtime-gates/02-direct-sqlcl-validate-gate.md` before completion.
 
 ### Outputs

@@ -3,8 +3,8 @@
 ## Oracle APEXlang skill
 
 `skills/apexlang` is an unmodified snapshot of
-[`oracle/skills/apex/apexlang`](https://github.com/oracle/skills/tree/30e30dbcbf5f92f3564bc85f8fd59d32736adcd6/apex/apexlang)
-at commit `30e30dbcbf5f92f3564bc85f8fd59d32736adcd6`.
+[`oracle/skills/apex/apexlang`](https://github.com/oracle/skills/tree/b94ccf4dec34b27859c2378fa71ba2bad884f2fe/apex/apexlang)
+at commit `b94ccf4dec34b27859c2378fa71ba2bad884f2fe`.
 
 Copyright (c) 2025 Oracle and/or its affiliates.
 

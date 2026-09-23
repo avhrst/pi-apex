@@ -34,6 +34,8 @@ Local success alone does not establish that an app is valid on a particular serv
 
 ## Documentation baseline
 
-These guides describe package version **0.3.0**, reviewed against source commit **`d7bfb59`** on **2026-09-12**. Examples use illustrative paths and connection names. Server access, credentials, and deployment targets are supplied by the operator.
+These guides describe package version **0.4.0**, updated on **2026-09-22** with Oracle's **2026.09.21** APEXlang skill release, pinned in [`UPSTREAM.json`](../../UPSTREAM.json). The update adds Media List and Comments workflows, expands Metric Card, Cards, and Region Display Selector support, and strengthens Smart Filter and Search validation. See the bundled [Oracle release notes](../../skills/apexlang/release-notes.json).
+
+Examples use illustrative paths and connection names. Server access, credentials, and deployment targets are supplied by the operator.
 
 Implementation claims link to local source files. Oracle prerequisite links are provided in the setup guide. The compatibility table is an advisory maintained by this project; its recorded review date is independent of this documentation date. No production validation or import is implied by these guides.

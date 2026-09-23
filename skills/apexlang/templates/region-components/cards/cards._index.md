@@ -15,4 +15,5 @@ Primary routing entrypoint for `cards` region templates.
 
 1. Load this file.
 2. Load `cards._common.md`.
-3. Load one scenario template in this folder.
+3. Load one SQL or REST source scenario template in this folder.
+4. When Cards refresh is requested, additionally load exactly one Cards-owned refresh template matching the trigger.
