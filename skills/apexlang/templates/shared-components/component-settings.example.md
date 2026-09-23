@@ -90,6 +90,7 @@ componentSetting NATIVE_DISPLAY_SELECTOR (
     type: region
     settings {
         attributes: {
+            includeSlider: false
         }
     }
 )

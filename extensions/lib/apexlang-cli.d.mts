@@ -136,8 +136,7 @@ export function validateMaterializationPaths(options: {
 export function prepareRuntimeApp(
   input: ApexlangInput,
   cwd: string,
-  outputRoot: string,
-  options?: { forceStage?: boolean }
+  outputRoot: string
 ): Promise<{
   appPath?: string;
   staged: boolean;

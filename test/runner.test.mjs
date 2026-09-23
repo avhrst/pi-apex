@@ -1147,7 +1147,7 @@ test("normalizes SQLcl export workspace shapes only in an ephemeral runtime copy
       deploymentPath,
       JSON.stringify({ app: { id: 104 }, workspace: { name: "TEST_WORKSPACE" } })
     );
-    const forcedStage = await prepareRuntimeApp(
+    const topLevelWorkspaceStage = await prepareRuntimeApp(
       {
         action: "runtime_validate",
         app_path: "monitor",
@@ -1155,12 +1155,83 @@ test("normalizes SQLcl export workspace shapes only in an ephemeral runtime copy
         workspace_name: "test_workspace"
       },
       workspace,
-      outputRoot,
-      { forceStage: true }
+      outputRoot
     );
-    assert.equal(forcedStage.staged, true);
-    assert.notEqual(forcedStage.appPath, appPath);
+    assert.equal(topLevelWorkspaceStage.staged, true);
+    assert.notEqual(topLevelWorkspaceStage.appPath, appPath);
     assert.equal(JSON.parse(await readFile(deploymentPath, "utf8")).app.id, 104);
+  } finally {
+    await Promise.all([
+      rm(workspace, { recursive: true, force: true }),
+      rm(outputRoot, { recursive: true, force: true })
+    ]);
+  }
+});
+
+test("normalizes only staged APEXlang files and binds the same bytes for validation and import", async () => {
+  const workspace = await mkdtemp(join(tmpdir(), "pi-apexlang-line-endings-workspace-"));
+  const outputRoot = await mkdtemp(join(tmpdir(), "pi-apexlang-line-endings-output-"));
+  try {
+    const appPath = join(workspace, "monitor");
+    await mkdir(join(appPath, "deployments"), { recursive: true });
+    await mkdir(join(appPath, "pages"), { recursive: true });
+    await mkdir(join(appPath, "apex-exports"), { recursive: true });
+    const sourceFiles = {
+      "deployments/default.json": JSON.stringify({ app: { id: 104 }, workspace: { name: "TEST_WORKSPACE" } }),
+      "application.apx": "application monitor (\r\n  id: 104\r)\n",
+      "pages/p00005.APX": "page 5 (\r\n  name: \"Monitor\"\r\n)\r\n",
+      "apex-exports/backup.apx": "application backup (\r\n)\r\n",
+      "notes.txt": "Keep original\r\n"
+    };
+    for (const [relativePath, contents] of Object.entries(sourceFiles)) {
+      await writeFile(join(appPath, relativePath), contents);
+    }
+    const input = {
+      action: "runtime_validate",
+      app_path: "monitor",
+      db_connection_name: "test_apex_db",
+      workspace_name: "TEST_WORKSPACE"
+    };
+    let expectedAppDigest;
+    for (const action of ["runtime_validate", "runtime_preflight", "runtime_doctor"]) {
+      const prepared = await prepareRuntimeApp({ ...input, action }, workspace, outputRoot);
+      assert.equal(prepared.staged, true);
+      assert.notEqual(prepared.appPath, appPath);
+      assert.equal(prepared.workspaceSource, "workspace.name");
+      assert.equal(
+        await readFile(join(prepared.appPath, "application.apx"), "utf8"),
+        "application monitor (\n  id: 104\n)\n"
+      );
+      assert.equal(
+        await readFile(join(prepared.appPath, "pages/p00005.APX"), "utf8"),
+        "page 5 (\n  name: \"Monitor\"\n)\n"
+      );
+      for (const relativePath of ["apex-exports/backup.apx", "notes.txt"]) {
+        assert.equal(await readFile(join(prepared.appPath, relativePath), "utf8"), sourceFiles[relativePath]);
+      }
+      const stagedDigest = await computeApexlangAppDigest(prepared.appPath);
+      expectedAppDigest ??= stagedDigest;
+      assert.equal(stagedDigest, expectedAppDigest);
+    }
+
+    // Abort at the process boundary: identical normalized bytes must pass the
+    // import digest gate without starting workspace discovery or a DB process.
+    const controller = new AbortController();
+    controller.abort();
+    const options = { cwd: workspace, outputRoot, signal: controller.signal };
+    await assert.rejects(
+      runApexlangImport(input, options, { expectedAppDigest }),
+      { name: "AbortError" }
+    );
+    for (const [relativePath, contents] of Object.entries(sourceFiles)) {
+      assert.equal(await readFile(join(appPath, relativePath), "utf8"), contents);
+    }
+
+    await writeFile(join(appPath, "application.apx"), sourceFiles["application.apx"].replace("id: 104", "id: 105"));
+    await assert.rejects(
+      runApexlangImport(input, options, { expectedAppDigest }),
+      /changed after the approved live check/
+    );
   } finally {
     await Promise.all([
       rm(workspace, { recursive: true, force: true }),

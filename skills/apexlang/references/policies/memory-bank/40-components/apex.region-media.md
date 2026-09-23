@@ -11,12 +11,13 @@ Defines reusable APEXlang BLOB, file/image, storage companion, and visual-token 
 - SQL-backed Classic Report and Interactive Report BLOB display aliases must project `dbms_lob.getlength(<blob_expr>)`; Cards and Content Row must project the raw BLOB expression for display-image aliases.
 - Raw LOB projection is display-only. Do not sort, group, distinct, join, analytically partition/order, or compare raw LOB aliases; follow `SQL_PLSQL_LOB_COMPARISON_KEY_FORBIDDEN_001` in `20-data/apex.sql.md`.
 - Cards image display uses the native Cards media block, not report-style child columns.
-- Cards BLOB display uses `media { source: blobColumn blobColumn: <BLOB_COLUMN_ALIAS> }`.
-- Cards URL-column display uses `media { source: urlColumn urlColumn: <URL_COLUMN_ALIAS> }`.
-- Cards direct URL display uses `media { source: imageUrl url: <STATIC_IMAGE_URL_OR_COLUMN_SUBSTITUTION> }`; `url` may be a static URL or an APEX substitution such as `&IMAGE_URL_COLUMN.`.
+- Cards BLOB display uses `media { advancedFormatting: false source: blobColumn blobColumn: <BLOB_COLUMN_ALIAS> position: first sizing: cover }`.
+- Cards URL-column display uses `media { advancedFormatting: false source: urlColumn urlColumn: <URL_COLUMN_ALIAS> position: first sizing: cover }`.
+- Cards direct URL display uses `media { advancedFormatting: false source: imageUrl url: <STATIC_IMAGE_URL_OR_COLUMN_SUBSTITUTION> position: first sizing: cover }`; `url` may be a static URL or an APEX substitution such as `&IMAGE_URL_COLUMN.`.
 - Cards BLOB metadata uses `blobAttributes { mimeTypeColumn: <MIME_TYPE_ALIAS> lastUpdatedColumn: <LAST_UPDATED_ALIAS> }`, and that block is valid only when `media.source: blobColumn` is present.
-- Cards media presentation defaults are represented by omission; do not emit APEXlang-side `position`, `appearance`, or `sizing` for default Cards media.
-- Cards media presentation properties are valid optional controls only for explicit non-default requirements: `position: first | background`, `appearance: square | widescreen`, and `sizing: cover`. Never emit `position: first`, `appearance: square`, or `sizing: cover` just to mirror APEX defaults.
+- Native Cards media requires `advancedFormatting`, `position`, and, when `source` is set, `sizing`. Use deterministic defaults `advancedFormatting: false`, `position: first`, and `sizing: cover`.
+- Supported presentation values are `position: first | body | background`, optional `appearance: square | widescreen`, and `sizing: fit | cover`.
+- Map accessible image text with `media.imageDescription`; `accessibleDescription` is not a Cards media property in the APEX 26.1 grammar.
 - Cards regions with BLOB media must define `card.primaryKeyColumn1` and keep companion image metadata columns projected in SQL when available, but must not invent additional `media` or `blobAttributes` properties.
 - `Storage -> File Types` is Form-only for upload render roles and must be a comma-separated MIME-type list; `File Name Column` must be normalized to `Filename Column`.
 - `Alt Text Column` applies only to image upload/display flows and must not be used for plain file upload.

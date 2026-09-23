@@ -170,7 +170,8 @@ Oracle documents these requirements for live APEXlang work:
 
 - Oracle APEX 26.1 with APEXlang support.
 - ORDS 26.1.1 or newer.
-- SQLcl 26.1 or newer, selected with the compatibility advisory above.
+- SQLcl 26.1.2 or newer, as required by the bundled Oracle skill, selected
+  with the compatibility advisory above.
 - Java 17 or Java 21 for SQLcl.
 - A saved SQLcl connection name and its corresponding APEX workspace name.
 - A local APEX app or authoritative schema, model, API, or table metadata.
@@ -215,9 +216,12 @@ updates `UPSTREAM.json`.
 
 ## Provenance and license
 
+Package **0.4.0** includes Oracle's **2026.09.21** APEXlang skill release.
+See the bundled [Oracle release notes](skills/apexlang/release-notes.json).
+
 The vendored skill comes from
-[`oracle/skills/apex/apexlang`](https://github.com/oracle/skills/tree/30e30dbcbf5f92f3564bc85f8fd59d32736adcd6/apex/apexlang)
-at commit `30e30dbcbf5f92f3564bc85f8fd59d32736adcd6`. See
+[`oracle/skills/apex/apexlang`](https://github.com/oracle/skills/tree/b94ccf4dec34b27859c2378fa71ba2bad884f2fe/apex/apexlang)
+at commit `b94ccf4dec34b27859c2378fa71ba2bad884f2fe`. See
 [`UPSTREAM.json`](UPSTREAM.json) and
 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
 

@@ -4,6 +4,7 @@ import { cp, lstat, mkdir, readFile, readdir, realpath, rm, writeFile } from "no
 import { dirname, extname, isAbsolute, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { stripVTControlCharacters } from "node:util";
+import { normalizeApxLineEndings } from "../../skills/apexlang/runtime/lib/common.mjs";
 
 const moduleDirectory = dirname(fileURLToPath(import.meta.url));
 
@@ -22,6 +23,7 @@ export const APEXLANG_ACTIONS = Object.freeze([
 const apexctlPath = resolve(APEXLANG_SKILL_ROOT, "tools/apexctl.mjs");
 const queryValidPropsPath = resolve(APEXLANG_SKILL_ROOT, "tools/query-valid-props.mjs");
 const localValidatePath = resolve(moduleDirectory, "apexlang-local-validate.mjs");
+const runtimeValidatePath = resolve(moduleDirectory, "apexlang-runtime-validate.mjs");
 const runtimeRoundtripPath = resolve(moduleDirectory, "apexlang-runtime-roundtrip.mjs");
 const sqlclPtyProxyPath = resolve(moduleDirectory, "apexlang-sqlcl-pty.py");
 const CONTROL_CHARACTER_PATTERN = /[\u0000-\u001f\u007f]/;
@@ -310,7 +312,11 @@ export function buildApexlangCommand(input) {
   addOption(args, "--apex-root", optionalPath(input, "apex_root"));
   addOption(args, "--compiler-oracle-home", optionalPath(input, "compiler_oracle_home"));
   addFlag(args, "--supporting-objects", input.supporting_objects);
-  return apexctl(args, [{ scriptPath: apexctlPath, args: probeArgs }]);
+  return {
+    scriptPath: runtimeValidatePath,
+    args,
+    prelude: [{ scriptPath: apexctlPath, args: probeArgs }]
+  };
 }
 
 export function buildApexlangImportCommand(input, importOptions = {}) {
@@ -622,7 +628,7 @@ async function clearStaleRuntimeEvidence(command, outputRoot) {
   }
 }
 
-export async function prepareRuntimeApp(input, cwd, outputRoot, prepareOptions = {}) {
+export async function prepareRuntimeApp(input, cwd, outputRoot) {
   if (!runtimeActionUsesDeployment(input)) {
     return { appPath: input.app_path ? resolve(cwd, input.app_path) : undefined, staged: false };
   }
@@ -664,10 +670,6 @@ export async function prepareRuntimeApp(input, cwd, outputRoot, prepareOptions =
     );
   }
 
-  if (topLevelWorkspace && prepareOptions.forceStage !== true) {
-    return { appPath, staged: false, workspaceSource: "workspace.name" };
-  }
-
   const stageKey = createHash("sha256")
     .update(`${appPath}\0${requestedWorkspace.toUpperCase()}`)
     .digest("hex")
@@ -702,6 +704,10 @@ export async function prepareRuntimeApp(input, cwd, outputRoot, prepareOptions =
     `${JSON.stringify(deployment, null, 2)}\n`,
     "utf8"
   );
+  // Oracle normalizes source line endings before live validation/import. Apply
+  // that same normalization only to the staged copy, before binding its digest,
+  // so validation and import approve identical bytes without changing the project.
+  await normalizeApxLineEndings(stagedAppPath);
   return {
     appPath: stagedAppPath,
     staged: true,
@@ -2119,9 +2125,7 @@ async function runCommand(input, command, options, runOptions = {}) {
   if (input.action === "workspace_probe" || command.prelude.length > 0) {
     await assertWorkspaceProbeCannotFollowSymlinks(options.cwd);
   }
-  const runtimeApp = await prepareRuntimeApp(input, options.cwd, options.outputRoot, {
-    forceStage: runOptions.forceRuntimeStage === true
-  });
+  const runtimeApp = await prepareRuntimeApp(input, options.cwd, options.outputRoot);
   const preRunAppDigest = runtimeApp.appPath && runtimeActionUsesDeployment(input)
     ? await computeApexlangAppDigest(runtimeApp.appPath)
     : undefined;
@@ -2190,7 +2194,7 @@ export async function runApexlangImport(input, options, importOptions = {}) {
     normalizedInput,
     buildApexlangImportCommand(normalizedInput, importOptions),
     options,
-    { forceRuntimeStage: true, expectedAppDigest }
+    { expectedAppDigest }
   );
   if (result.ok || importOptions.targetResolutionMode === "create-new") return result;
   return runWarningCompatibleImport(normalizedInput, result, options);
@@ -2206,6 +2210,6 @@ export function runApexlangCreateNewProof(input, options, proofOptions = {}) {
       createNewConfirmed: false
     }),
     options,
-    { forceRuntimeStage: true, expectedAppDigest }
+    { expectedAppDigest }
   );
 }

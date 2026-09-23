@@ -15,6 +15,7 @@ Define deterministic defaults for APEX component settings. Use this markdown fam
 
 # Guardrails
 - For current compiler compatibility, use `settings { attributes: {...} }` for component settings.
+- Application-scoped plug-in attributes belong in a `componentSetting` declaration; do not add them to a page component's instance-level `settings` block.
 - Do not emit direct keys inside `settings {}` (for example `display_as`, `mode`, `match_mode`).
 - Do not invent unsupported component categories.
 - Keep environment-specific values out of templates.

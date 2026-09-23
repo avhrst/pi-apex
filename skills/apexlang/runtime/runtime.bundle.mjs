@@ -15,6 +15,7 @@ import {
   apexlangToolPath,
   collectFiles,
   ensureDir,
+  normalizeApxLineEndings,
   readJson,
   removeDir,
   runCommand,
@@ -154,12 +155,12 @@ async function cleanupDraftRun(stagingRunRoot) {
 }
 
 /**
- * Public workspace probe that discovers app, metadata, requirement, and explicit DB/workspace prompt context.
+ * Public workspace probe that discovers app, metadata, requirements, and DB/runtime prompt context.
  */
 
 
 /**
- * Default discovery policy for app roots, metadata files, bounded scans, and explicit DB/workspace prompts.
+ * Default discovery policy for app roots, metadata files, bounded scans, and discovery-first DB prompts.
  */
 const DEFAULT_CONFIG = {
   app_discovery: {
@@ -190,28 +191,26 @@ const DEFAULT_CONFIG = {
     allowed_extensions: [".json", ".yaml", ".yml", ".md", ".sql", ".xml"]
   },
   db_prompt_flow: {
-    prompt_mode: "explicit_db_connection_and_workspace_flow",
+    prompt_mode: "discovery_first_connection_flow",
     interactive_only: true,
     discovery_steps: ["inspect_offline_schema_registry", "scan_saved_sqlcl_connections"],
     metadata_preference: "prefer_authoritative_offline_context",
-    required_live_inputs: ["db_connection_name", "db_context.workspace.name"],
-    auto_bind_single_saved_connection: false,
+    required_live_inputs: ["db_connection_name"],
+    auto_bind_single_saved_connection: true,
     manual_entry: {
       input_name: "db_connection_name",
-      companion_input_name: "apex_workspace_name",
-      workspace_context_field: "db_context.workspace.name",
-      prompt: "Provide db_connection_name and the corresponding APEX workspace name for this workflow."
+      prompt: "Provide db_connection_name because no usable saved SQLcl connection could be resolved."
     },
     workspace_prompt: {
       input_name: "apex_workspace_name",
       context_field: "db_context.workspace.name",
-      prompt: "Provide the APEX workspace name that corresponds to db_connection_name."
+      prompt: "Choose the workspace reported by the active runtime when it cannot resolve a unique workspace."
     },
     multiple_connection_prompt: {
       source: "saved_sqlcl_connections",
       prompt_mode: "select_from_list",
       empty_list_prompt:
-        "No saved SQLcl connections were found. Provide db_connection_name and the corresponding APEX workspace name if live DB context is still required, or continue only with authoritative offline metadata."
+        "No saved SQLcl connections were found. Provide db_connection_name if live DB context is still required, or continue only with authoritative offline metadata."
     },
     offline_override: {
       prompt_mode: "explicit_opt_in",
@@ -223,7 +222,7 @@ const DEFAULT_CONFIG = {
       disables_apex_import: true
     },
     workspace_selection: {
-      prompt_mode: "explicit_workspace_name_required",
+      prompt_mode: "runtime_ambiguity_or_new_app_only",
       persistence: "session_context_only",
       context_path: "APEXLANG_OUTPUT_ROOT/context-resolution.json",
       context_field: "db_context.workspace",
@@ -1740,20 +1739,20 @@ function normalizeRuntimeProvider(value = DEFAULT_RUNTIME_PROVIDER) {
   return DEFAULT_RUNTIME_PROVIDER;
 }
 
-function decodeHtmlEntities(value = "") {
+export function decodeHtmlEntities(value = "") {
   return String(value)
     .replace(/&nbsp;/gi, " ")
-    .replace(/&amp;/gi, "&")
     .replace(/&lt;/gi, "<")
     .replace(/&gt;/gi, ">")
     .replace(/&quot;/gi, "\"")
-    .replace(/&#39;/gi, "'");
+    .replace(/&#39;/gi, "'")
+    .replace(/&amp;/gi, "&");
 }
 
-function extractTextFromHtml(html = "") {
+export function extractTextFromHtml(html = "") {
   return decodeHtmlEntities(
     String(html)
-      .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
+      .replace(/<script\b[^>]*>[\s\S]*?<\/script\b[^>]*>/gi, " ")
       .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
       .replace(RUNTIME_TEXT_TAG_STRIP_PATTERN, " ")
       .replace(/\s+/g, " ")
@@ -1802,22 +1801,22 @@ function safeArtifactName(prefix, detail, suffix) {
   return `${sanitizeArtifactFilePart(prefix)}-${sanitizeArtifactFilePart(detail)}.${suffix}`;
 }
 
-async function requestRuntimeUrl(targetUrl, { maxRedirects = 5 } = {}) {
+export async function requestRuntimeUrl(targetUrl, { maxRedirects = 5, requestImpl } = {}) {
   const visited = [];
 
   async function execute(currentUrl, redirectsRemaining) {
     const parsedUrl = new URL(currentUrl);
     const client = parsedUrl.protocol === "https:" ? https : http;
     const result = await new Promise((resolve, reject) => {
-      const req = client.request(
+      const request = requestImpl ?? client.request.bind(client);
+      const req = request(
         parsedUrl,
         {
           method: "GET",
           headers: {
             "user-agent": "apexctl-runtime-verifier/1.0",
             accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
-          },
-          rejectUnauthorized: false
+          }
         },
         (res) => {
           const chunks = [];
@@ -2082,7 +2081,8 @@ async function verifyRuntimeUiWithHttpFallback({
   runtimePageUrl = "",
   pageId = "",
   artifactDir = DEFAULT_RUNTIME_VERIFY_ARTIFACT_DIR,
-  runCommandImpl
+  runCommandImpl,
+  requestRuntimeUrlImpl = requestRuntimeUrl
 }) {
   const baseUrlResolution = runtimePageUrl
     ? { status: "pass", runtimeBaseUrl: "", checkedCandidates: [] }
@@ -2179,7 +2179,7 @@ async function verifyRuntimeUiWithHttpFallback({
     }
 
     try {
-      const response = await requestRuntimeUrl(target.runtimeUrl);
+      const response = await requestRuntimeUrlImpl(target.runtimeUrl);
       const htmlArtifactPath = path.join(
         artifactDir,
         safeArtifactName(`runtime-page-${targetsResult.appIdentity.applicationId || "app"}`, String(target.pageId), "html")
@@ -2271,6 +2271,7 @@ async function verifyRuntimeUiWithHttpFallback({
 export async function verifyRuntimeUi(options = {}) {
   const deps = {
     runCommand,
+    requestRuntimeUrl,
     verifyRuntimeWithChromeDevtools: null,
     ...options._deps
   };
@@ -2314,7 +2315,8 @@ export async function verifyRuntimeUi(options = {}) {
     runtimePageUrl: options.runtimePageUrl,
     pageId: options.pageId,
     artifactDir,
-    runCommandImpl: deps.runCommand
+    runCommandImpl: deps.runCommand,
+    requestRuntimeUrlImpl: deps.requestRuntimeUrl
   });
   result.payload.runtime_verification_provider_requested = requestedProvider;
   if (requestedProvider === RUNTIME_PROVIDER_CHROME) {
@@ -3287,6 +3289,9 @@ function buildRoundtripSummary(base) {
     runtime_verification_retry_required: false,
     capability_state: "",
     local_validation_policy: "advisory",
+    line_endings_status: "not-run",
+    line_endings_checked_files: 0,
+    line_endings_normalized_files: [],
     local_validation_execution_status: "not-run",
     local_validation_status: "not-run",
     local_validation_entrypoint_requested: LOCAL_VALIDATION_REQUESTED_ENTRYPOINT,
@@ -3673,6 +3678,14 @@ function componentAttributesPath() {
     : path.resolve(apexlangToolPath("..", "..", "..", "ai-context", "memory-bank", "component-attributes.json"));
 }
 
+function grammarContractToolPath() {
+  return apexlangToolPath("public", "grammar_contract.mjs");
+}
+
+function apexlangValidatorPath() {
+  return apexlangToolPath("internal", "python", "validate_apexlang.py");
+}
+
 async function readJsonIfExists(filePath) {
   try {
     return await readJson(filePath);
@@ -3937,17 +3950,129 @@ async function loadVscodeProblemsEvidence({ vscodeProblemsPath = "", appPath = "
   };
 }
 
-function buildComponentContracts(componentAttributes = {}, { build = "", compilerReport = {}, source = "component-attributes" } = {}) {
+function grammarPropertyContract(definition = "", requiredPaths = new Set(), pathPrefix = "") {
+  const allowedProperties = [];
+  const propertyEnums = {};
+  for (const line of String(definition || "").split(/\r?\n/)) {
+    const propertyMatch = line.match(/"([A-Za-z][A-Za-z0-9]*)"\s*":"\s*<ws>/);
+    if (!propertyMatch) continue;
+    const propertyName = propertyMatch[1];
+    if (!allowedProperties.includes(propertyName)) allowedProperties.push(propertyName);
+    const enumMatch = line.match(/<ws>\s*\(([^)]+)\)/);
+    if (enumMatch) {
+      const values = [...enumMatch[1].matchAll(/"([^"]+)"/g)].map((match) => match[1]);
+      if (values.length) propertyEnums[propertyName] = [...new Set(values)];
+    }
+  }
+  return {
+    allowedProperties,
+    requiredProperties: allowedProperties.filter((propertyName) => requiredPaths.has(`${pathPrefix}${propertyName}`)),
+    propertyEnums
+  };
+}
+
+function grammarChildContract(grammarContract = {}, selector = "region.column") {
+  const resolved = (grammarContract?.compilerContract?.resolvedChildren || [])
+    .find(({ parent, child }) => `${parent}.${child}` === selector);
+  if (!resolved) return null;
+  const productions = new Map((grammarContract.productions || []).map(({ name, definition }) => [name, definition]));
+  const root = resolved.grammarProduction;
+  const requiredPaths = new Set(
+    (grammarContract?.compilerContract?.requiredActiveProperties || [])
+      // Compiler defaults are not optionality. Keep a property required unless
+      // the target-build contract explicitly marks it otherwise.
+      .filter(({ compilerRequired }) => compilerRequired !== false)
+      .map(({ path: propertyPath }) => propertyPath)
+  );
+  const direct = grammarPropertyContract(
+    productions.get(`${root}-direct-property`) || "",
+    requiredPaths,
+    `${selector}.`
+  );
+  const namedDeclaration = resolved.componentIdPolicy === "required-as-name" || direct.allowedProperties.includes("name");
+  if (namedDeclaration) {
+    direct.allowedProperties = direct.allowedProperties.filter((propertyName) => propertyName !== "name");
+    direct.requiredProperties = direct.requiredProperties.filter((propertyName) => propertyName !== "name");
+    delete direct.propertyEnums.name;
+  }
+
+  const childContract = {
+    ...direct,
+    allowedBlocks: [],
+    requiredBlocks: [],
+    declarationStyle: namedDeclaration ? "named" : "unnamed",
+    declaration: resolved.declaration,
+    componentIdPolicy: resolved.componentIdPolicy,
+    compilerComponentTypeId: resolved.compilerComponentTypeId,
+    grammarProduction: resolved.grammarProduction,
+    conformance: (grammarContract.compilerContract?.grammarConformance || [])
+      .find((entry) => entry.selector === selector) || null
+  };
+  const groupDefinition = productions.get(`${root}-group-block`) || "";
+  for (const referenceMatch of groupDefinition.matchAll(/<([^>]+)>/g)) {
+    const productionName = referenceMatch[1];
+    const blockDefinition = productions.get(productionName) || "";
+    const blockName = blockDefinition.match(/::=.*?"([A-Za-z][A-Za-z0-9]*)"\s*<ws>\s*"\{"/)?.[1];
+    if (!blockName) continue;
+    const blockContract = grammarPropertyContract(
+      productions.get(`${productionName}-property`) || "",
+      requiredPaths,
+      `${selector}.${blockName}.`
+    );
+    childContract.allowedBlocks.push(blockName);
+    if (blockContract.requiredProperties.length) childContract.requiredBlocks.push(blockName);
+    childContract[blockName] = blockContract;
+  }
+  return childContract;
+}
+
+function copyContractNode(node = {}) {
+  const copied = {
+    allowedProperties: node.allowedProperties || [],
+    requiredProperties: node.requiredProperties || [],
+    allowedBlocks: node.allowedBlocks || [],
+    requiredBlocks: node.requiredBlocks || [],
+    propertyEnums: node.propertyEnums || {},
+    childComponents: {}
+  };
+  for (const key of ["grammarRequiredProperties", "compilerRequiredProperties", "compilerDefaultedProperties", "conformance"]) {
+    if (node[key] !== undefined) copied[key] = node[key];
+  }
+  for (const key of ["declarationStyle", "declaration", "componentIdPolicy", "compilerComponentTypeId", "grammarProduction"]) {
+    if (node[key] !== undefined) copied[key] = node[key];
+  }
+  for (const [childName, childNode] of Object.entries(node || {})) {
+    if (!childNode || typeof childNode !== "object" || Array.isArray(childNode)) continue;
+    if (!childNode.allowedProperties && !childNode.requiredProperties && !childNode.allowedBlocks) continue;
+    copied.childComponents[childName] = copyContractNode(childNode);
+  }
+  return copied;
+}
+
+export function buildComponentContracts(
+  componentAttributes = {},
+  { build = "", compilerReport = {}, source = "component-attributes", mediaListGrammarContract = null } = {}
+) {
+  const resolvedAttributes = structuredClone(componentAttributes || {});
+  const mediaListPolicy = resolvedAttributes?.components?.region?.mediaList || null;
+  const policyBuild = componentAttributes?.compilerProvenance?.buildID || "unknown";
+  const mediaListColumn = mediaListGrammarContract
+    ? grammarChildContract(mediaListGrammarContract, "region.column")
+    : null;
+  const mediaListSourceLocations = mediaListGrammarContract?.compilerContract
+    ? mediaListGrammarContract.compilerContract.mediaListSourceLocations
+      || (mediaListGrammarContract.compilerContract.assumptions || [])
+        .map((entry) => /^region\.source\.location=(.+)$/.exec(String(entry))?.[1] || "")
+        .filter(Boolean)
+    : [];
+  if (mediaListColumn && resolvedAttributes?.components?.region?.mediaList) {
+    resolvedAttributes.components.region.mediaList.column = mediaListColumn;
+  }
   const components = {};
-  for (const [componentType, families] of Object.entries(componentAttributes.components || {})) {
+  for (const [componentType, families] of Object.entries(resolvedAttributes.components || {})) {
     components[componentType] = {};
     for (const [familyName, contract] of Object.entries(families || {})) {
-      components[componentType][familyName] = {
-        allowedBlocks: contract.allowedBlocks || [],
-        requiredBlocks: contract.requiredBlocks || [],
-        propertyEnums: contract.propertyEnums || {},
-        childComponents: {}
-      };
+      components[componentType][familyName] = copyContractNode(contract);
       for (const [childName, childContract] of Object.entries(contract || {})) {
         if (!childContract || typeof childContract !== "object" || Array.isArray(childContract)) {
           continue;
@@ -3955,28 +4080,208 @@ function buildComponentContracts(componentAttributes = {}, { build = "", compile
         if (!childContract.allowedProperties && !childContract.requiredProperties && !childContract.allowedBlocks) {
           continue;
         }
-        components[componentType][familyName].childComponents[childName] = {
-          allowedProperties: childContract.allowedProperties || [],
-          requiredProperties: childContract.requiredProperties || [],
-          allowedBlocks: childContract.allowedBlocks || [],
-          requiredBlocks: childContract.requiredBlocks || [],
-          propertyEnums: childContract.propertyEnums || {}
-        };
+        components[componentType][familyName].childComponents[childName] = copyContractNode(childContract);
       }
     }
   }
   return {
     generated_at: new Date().toISOString(),
-    build: build || compilerReport?.compilerTruth?.buildID || componentAttributes?.compilerProvenance?.buildID || "unknown",
+    build: mediaListGrammarContract?.compilerContract?.buildID
+      || build
+      || compilerReport?.compilerTruth?.buildID
+      || componentAttributes?.compilerProvenance?.buildID
+      || "unknown",
     source,
     warnings_as_errors: true,
     valid_component_types: Object.keys(components).sort(),
     deprecated_slots: componentAttributes?.deprecatedSlots || componentAttributes?.deprecated_slots || [],
     known_warning_as_error_cases: compilerReport?.warningAsErrorCases || componentAttributes?.knownWarningAsErrorCases || [],
     compiler_truth_status: compilerReport?.status || "unknown",
-    compiler_provenance: componentAttributes?.compilerProvenance || null,
+    compiler_provenance: mediaListGrammarContract?.compilerContract
+      ? {
+          buildID: mediaListGrammarContract.compilerContract.buildID,
+          metadataHash: mediaListGrammarContract.compilerContract.metadataHash,
+          normalizerVersion: mediaListGrammarContract.compilerContract.normalizerVersion,
+          source: mediaListGrammarContract.compilerContract.source
+        }
+      : componentAttributes?.compilerProvenance || null,
+    compiler_resolutions: mediaListColumn
+      ? {
+          "region.mediaList.column": {
+            compilerComponentTypeId: mediaListColumn.compilerComponentTypeId,
+            grammarProduction: mediaListColumn.grammarProduction,
+            declarationStyle: mediaListColumn.declarationStyle,
+            declaration: mediaListColumn.declaration,
+            componentIdPolicy: mediaListColumn.componentIdPolicy,
+            assumptions: mediaListGrammarContract.compilerContract.assumptions,
+            conformance: mediaListColumn.conformance || null
+          }
+        }
+      : {},
+    capability_provenance: mediaListPolicy
+      ? {
+          "region.mediaList.column": {
+            source: mediaListColumn ? "compiler-runtime-metadata" : "curated-component-policy",
+            compilerDerived: Boolean(mediaListColumn),
+            build: mediaListColumn
+              ? mediaListGrammarContract.compilerContract.buildID
+              : policyBuild,
+            status: mediaListColumn ? "resolved" : "policy_fallback",
+            sourceLocations: mediaListColumn ? mediaListSourceLocations : []
+          },
+          "region.mediaList.settings": {
+            source: "curated-component-policy",
+            compilerDerived: false,
+            build: policyBuild,
+            status: mediaListPolicy.settings ? "available" : "unsupported"
+          },
+          "region.mediaList.plugin-avatar": {
+            source: "curated-component-policy",
+            compilerDerived: false,
+            build: policyBuild,
+            status: mediaListPolicy["plugin-avatar"] ? "available" : "unsupported"
+          },
+          "region.mediaList.plugin-badge": {
+            source: "curated-component-policy",
+            compilerDerived: false,
+            build: policyBuild,
+            status: mediaListPolicy["plugin-badge"] ? "available" : "unsupported"
+          },
+          "region.mediaList.action": {
+            source: "curated-component-policy",
+            compilerDerived: false,
+            build: policyBuild,
+            status: mediaListPolicy.action ? "available" : "unsupported"
+          },
+          "region.mediaList.plugin-grouping": {
+            source: "curated-component-policy",
+            compilerDerived: false,
+            build: policyBuild,
+            status: mediaListPolicy["plugin-grouping"] ? "available" : "unsupported"
+          }
+        }
+      : {},
     components
   };
+}
+
+function apexlangRegionBlocks(text) {
+  const regionPattern = /^([ \t]*)region\b[^\n]*\(\s*$([\s\S]*?)^\1\)\s*$/gm;
+  return [...text.matchAll(regionPattern)].map((match) => match[0]);
+}
+
+export function appTextUsesMediaListReport(text) {
+  return appTextMediaListReportSourceLocations(text).length > 0
+    || apexlangRegionBlocks(text).some((regionBlock) =>
+      /\btype\s*:\s*themeTemplateComponent\/mediaList\b/.test(regionBlock)
+      && /\bcomponentAppearance\s*\{[\s\S]*?\bdisplay\s*:\s*report\b/.test(regionBlock));
+}
+
+export function appTextMediaListReportSourceLocations(text) {
+  return apexlangRegionBlocks(text)
+    .filter((regionBlock) =>
+      /\btype\s*:\s*themeTemplateComponent\/mediaList\b/.test(regionBlock)
+      && /\bcomponentAppearance\s*\{[\s\S]*?\bdisplay\s*:\s*report\b/.test(regionBlock))
+    .map((regionBlock) => {
+      const match = /\bsource\s*\{[\s\S]*?\blocation\s*:\s*([A-Za-z][A-Za-z0-9_/-]*)/.exec(regionBlock);
+      return match?.[1] || "";
+    });
+}
+
+async function appMediaListReportSourceLocations(appPath) {
+  const locations = [];
+  const files = await collectFiles(appPath, (filePath) =>
+    filePath.endsWith(".apx")
+    && !filePath.split(path.sep).includes("apex-exports"));
+  for (const filePath of files) {
+    const text = await fs.readFile(filePath, "utf8");
+    locations.push(...appTextMediaListReportSourceLocations(text));
+  }
+  return locations;
+}
+
+export async function resolveMediaListGrammarContract({
+  appPath = "",
+  compilerOracleHome = "",
+  buildGrammarContractFn = null
+} = {}) {
+  if (!appPath) return { status: "not_applicable", contract: null };
+  const sourceLocations = await appMediaListReportSourceLocations(appPath);
+  if (sourceLocations.length === 0) return { status: "not_applicable", contract: null };
+  if (sourceLocations.some((location) => !location)) {
+    return {
+      status: "unresolved",
+      contract: null,
+      reason: "Every Media List report region must declare source.location."
+    };
+  }
+  try {
+    const buildGrammarContract = buildGrammarContractFn
+      || (await import(pathToFileURL(grammarContractToolPath()).href)).buildGrammarContract;
+    const contracts = [];
+    for (const sourceLocation of [...new Set(sourceLocations)].sort()) {
+      const { contract } = await buildGrammarContract({
+        components: ["region"],
+        children: ["region.column"],
+        groups: ["source", "layout", "appearance"],
+        conditions: [
+          "region.type=themeTemplateComponent/mediaList",
+          `region.source.location=${sourceLocation}`
+        ],
+        useCache: false,
+        compilerOracleHome
+      });
+      const column = contract?.compilerContract?.resolvedChildren?.find(({ parent, child }) =>
+        parent === "region" && child === "column");
+      if (contract?.compilerContract?.status !== "resolved" || !column) {
+        return {
+          status: "unresolved",
+          contract: null,
+          reason: `Media List region.column did not resolve uniquely for source.location=${sourceLocation}.`
+        };
+      }
+      contracts.push({ sourceLocation, contract, column });
+    }
+    const baselineColumn = JSON.stringify(contracts[0].column);
+    if (contracts.some(({ column }) => JSON.stringify(column) !== baselineColumn)) {
+      return {
+        status: "unresolved",
+        contract: null,
+        reason: "Media List report source locations resolve incompatible region.column contracts."
+      };
+    }
+    const contract = structuredClone(contracts[0].contract);
+    const conformance = contract.compilerContract?.grammarConformance || [];
+    if (conformance.some((entry) => entry.blocking || entry.status === "mismatch")) {
+      const mismatch = conformance.flatMap((entry) => entry.mismatches || [])
+        .map((entry) => entry.path)
+        .sort()
+        .join(", ");
+      return {
+        status: "unresolved",
+        contract: null,
+        reason: `Media List grammar/compiler conformance mismatch${mismatch ? `: ${mismatch}` : "."}`
+      };
+    }
+    contract.compilerContract.mediaListSourceLocations = contracts.map(({ sourceLocation }) => sourceLocation);
+    contract.compilerContract.assumptions = [
+      ...(contract.compilerContract.assumptions || []).filter((entry) =>
+        !String(entry).startsWith("region.source.location=")),
+      ...contracts.map(({ sourceLocation }) => `region.source.location=${sourceLocation}`)
+    ];
+    return { status: "resolved", contract };
+  } catch (error) {
+    return { status: "unavailable", contract: null, reason: error instanceof Error ? error.message : String(error) };
+  }
+}
+
+async function runTargetBuildLocalValidation({ appPath, componentContractPath }) {
+  return runCommand("python3", [
+    apexlangValidatorPath(),
+    "--component-attributes",
+    componentContractPath,
+    appPath
+  ], { allowFailure: true, passthrough: false });
 }
 
 function validationArtifactPaths(options = {}) {
@@ -3997,8 +4302,7 @@ function validationArtifactPaths(options = {}) {
 }
 
 async function writeValidationArtifacts({ report, problemsPayload, componentContract, paths }) {
-  const contractBuild = sanitizeSegment(componentContract.build || "unknown") || "unknown";
-  const componentContractPath = path.join(paths.componentContractsDir, `${contractBuild}.json`);
+  const componentContractPath = componentContractArtifactPath(componentContract, paths);
   report.artifacts.component_contract_path = componentContractPath;
   try {
     await fs.access(paths.transcriptPath);
@@ -4011,6 +4315,11 @@ async function writeValidationArtifacts({ report, problemsPayload, componentCont
   await writeJson(paths.reportPath, report);
 }
 
+function componentContractArtifactPath(componentContract, paths) {
+  const contractBuild = sanitizeSegment(componentContract.build || "unknown") || "unknown";
+  return path.join(paths.componentContractsDir, `${contractBuild}.json`);
+}
+
 /**
  * Run the live validate-only gate and write validation reports for editor and agent feedback.
  */
@@ -4020,6 +4329,8 @@ export async function runRuntimeValidate(options = {}) {
     runCommand,
     loadVscodeProblemsEvidence,
     readJsonIfExists,
+    resolveMediaListGrammarContract,
+    runTargetBuildLocalValidation,
     writeValidationArtifacts,
     ...options._deps
   };
@@ -4048,11 +4359,13 @@ export async function runRuntimeValidate(options = {}) {
     validation_sources: {
       live_validator: { status: "blocked", source: "runtime validate-only roundtrip" },
       compiler_truth: { status: "not_run", report_path: paths.compilerTruthReportPath },
+      target_build_contract: { status: "not_run", source: "compiler-runtime-metadata" },
       vscode_problems: { status: "not_provided", source: "not_provided", unresolved_count: null }
     },
     diagnostic_sources: {
       local_lint: { status: "not_run", source: "runtime validate-only roundtrip" },
       compiler_truth: { status: "not_run", report_path: paths.compilerTruthReportPath },
+      target_build_contract: { status: "not_run", source: "compiler-runtime-metadata" },
       vscode_problems: { status: "not_provided", source: "not_provided", unresolved_count: null }
     },
     problem_count: 0,
@@ -4134,12 +4447,63 @@ export async function runRuntimeValidate(options = {}) {
     policy: "advisory_when_live_validation_passes"
   };
 
+  const mediaListResolution = await deps.resolveMediaListGrammarContract({
+    appPath,
+    compilerOracleHome: options.compilerOracleHome || ""
+  });
+  const mediaListGrammarContract = mediaListResolution.contract || null;
+  const grammarBuild = mediaListGrammarContract?.compilerContract?.buildID || "";
+  const compilerBuild = compilerReport?.compilerTruth?.buildID || "";
+  if (mediaListResolution.status !== "not_applicable" && mediaListResolution.status !== "resolved") {
+    report.blocking_reasons.push(
+      `Target-build Media List contract is ${mediaListResolution.status}: ${mediaListResolution.reason || "unknown reason"}`
+    );
+  }
+  if (grammarBuild && compilerBuild && grammarBuild !== compilerBuild) {
+    report.blocking_reasons.push(
+      `Target-build Media List contract build ${grammarBuild} does not match compiler-truth build ${compilerBuild}.`
+    );
+  }
+  if (grammarBuild && report.target_build && grammarBuild !== report.target_build) {
+    report.blocking_reasons.push(
+      `Target-build Media List contract build ${grammarBuild} does not match live runtime build ${report.target_build}.`
+    );
+  }
+
   const componentAttributes = (await deps.readJsonIfExists(componentAttributesPath())) || {};
   const componentContract = buildComponentContracts(componentAttributes, {
-    build: report.target_build || compilerReport?.compilerTruth?.buildID || "",
+    build: compilerReport?.compilerTruth?.buildID || componentAttributes?.compilerProvenance?.buildID || "",
     compilerReport,
-    source: report.target_build ? "target-build-component-contract" : "component-attributes-fallback"
+    source: mediaListGrammarContract ? "compiler-runtime-metadata+curated-policy" : "curated-component-policy",
+    mediaListGrammarContract
   });
+  const componentContractPath = componentContractArtifactPath(componentContract, paths);
+  report.artifacts.component_contract_path = componentContractPath;
+  await writeJson(componentContractPath, componentContract);
+
+  if (mediaListGrammarContract && !report.blocking_reasons.some((reason) => /contract build .* does not match/.test(reason))) {
+    const targetBuildLint = await deps.runTargetBuildLocalValidation({ appPath, componentContractPath });
+    const targetBuildLintStatus = targetBuildLint.code === 0 ? "pass" : "fail";
+    report.validation_sources.target_build_contract = {
+      status: targetBuildLintStatus,
+      source: componentContractPath,
+      compiler_build: componentContract.build,
+      output: cleanOutput(targetBuildLint).slice(0, 4000)
+    };
+    report.diagnostic_sources.target_build_contract = {
+      ...report.validation_sources.target_build_contract,
+      policy: "blocking_for_compiler_resolved_components"
+    };
+    if (targetBuildLintStatus !== "pass") {
+      report.blocking_reasons.push("Target-build component contract validation did not pass.");
+    }
+  } else if (mediaListResolution.status === "not_applicable") {
+    report.validation_sources.target_build_contract = {
+      status: "not_applicable",
+      source: "No Media List report component found in the target app."
+    };
+    report.diagnostic_sources.target_build_contract = report.validation_sources.target_build_contract;
+  }
 
   const vscodeEvidence = await deps.loadVscodeProblemsEvidence({
     vscodeProblemsPath: options.vscodeProblemsPath || "",
@@ -4185,7 +4549,7 @@ export async function runRuntimeValidate(options = {}) {
   report.validation_status =
     report.validation_sources.live_validator.status === "pass" &&
     problemsPayload.unresolved_count === 0 &&
-    !report.blocking_reasons.some((reason) => /^Missing required /.test(reason))
+    report.blocking_reasons.length === 0
       ? "pass"
       : "fail";
   report.import_eligibility = report.validation_status === "pass" ? "validate-only-passed" : "blocked";
@@ -4338,18 +4702,32 @@ function runPathSession({ dbConnectionName, input, labelPrefix = "sql" }) {
   };
 }
 
-async function runBuildRootSession({ buildRoot, input, label = "apex_sql_build_root" }) {
-  const tempScriptPath = path.join(os.tmpdir(), `apexctl-roundtrip-${Date.now()}.sql`);
-  await fs.writeFile(tempScriptPath, `${input}\n`, "utf8");
-  const result = runInteractiveCommand("apex", ["sql", "-s", tempScriptPath], { cwd: buildRoot });
-  await fs.rm(tempScriptPath, { force: true });
-  return {
-    success: !hasWorkspaceAmbiguity(result) && !hasRuntimeFailure(result),
-    workspaceAmbiguity: hasWorkspaceAmbiguity(result),
-    entrypoint: label,
-    result,
-    transcript: `## ${label}\n${cleanOutput(result)}\n`
-  };
+export async function runBuildRootSession({
+  buildRoot,
+  input,
+  label = "apex_sql_build_root",
+  _deps = {}
+}) {
+  const runInteractiveCommandImpl = _deps.runInteractiveCommand ?? runInteractiveCommand;
+  const tempDirectory = await fs.mkdtemp(path.join(os.tmpdir(), "apexctl-roundtrip-"));
+  const tempScriptPath = path.join(tempDirectory, "session.sql");
+  try {
+    await fs.writeFile(tempScriptPath, `${input}\n`, {
+      encoding: "utf8",
+      mode: 0o600,
+      flag: "wx"
+    });
+    const result = runInteractiveCommandImpl("apex", ["sql", "-s", tempScriptPath], { cwd: buildRoot });
+    return {
+      success: !hasWorkspaceAmbiguity(result) && !hasRuntimeFailure(result),
+      workspaceAmbiguity: hasWorkspaceAmbiguity(result),
+      entrypoint: label,
+      result,
+      transcript: `## ${label}\n${cleanOutput(result)}\n`
+    };
+  } finally {
+    await fs.rm(tempDirectory, { recursive: true, force: true });
+  }
 }
 
 function runPathRoundtrip({ appPath, dbConnectionName, workspaceId, includeImport = true }) {
@@ -4583,6 +4961,7 @@ export async function runRuntimeRoundtrip(options = {}) {
     resolveRuntimeTargetApplication,
     executeSelectedRoundtrip,
     resolveWorkspaceIdForRuntime,
+    normalizeApxLineEndings,
     verifyRuntimeUi,
     writeRoundtripArtifacts,
     ...options._deps
@@ -4747,6 +5126,27 @@ export async function runRuntimeRoundtrip(options = {}) {
     summary.recommended_next_action = "Run runtime roundtrip without --preflight-only when ready.";
     await deps.writeRoundtripArtifacts(summary, transcriptParts.join("\n"));
     return buildRoundtripResult(0, summary);
+  }
+
+  try {
+    const lineEndings = await deps.normalizeApxLineEndings(options.appPath);
+    summary.line_endings_status = lineEndings.status;
+    summary.line_endings_checked_files = lineEndings.checkedFiles;
+    summary.line_endings_normalized_files = lineEndings.normalizedFiles;
+    if (lineEndings.normalizedFiles.length > 0) {
+      summary.notes.push(
+        `Normalized ${lineEndings.normalizedFiles.length} APEXlang source file(s) from CRLF or CR to LF before live validation.`
+      );
+    }
+  } catch (error) {
+    summary.line_endings_status = "fail";
+    summary.runtime_gate_status = "fail";
+    summary.failure_class = "line_endings_normalization_failed";
+    summary.blocking_reason = "APEXLANG_LF_LINE_ENDINGS_REQUIRED_001";
+    summary.recommended_next_action = "Normalize every .apx file to LF before rerunning validation or import.";
+    summary.notes.push(error instanceof Error ? error.message : String(error));
+    await deps.writeRoundtripArtifacts(summary, transcriptParts.join("\n"));
+    return buildRoundtripResult(1, summary);
   }
 
   const localValidationStage = await runTimedStage(

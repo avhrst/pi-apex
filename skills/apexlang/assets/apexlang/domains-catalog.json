@@ -55,7 +55,12 @@
         "data source type",
         "contextual info",
         "blob display",
-        "filter namespace"
+        "filter namespace",
+        "smart filter",
+        "smart filters",
+        "smart filter search",
+        "smart filters region",
+        "faceted search"
       ],
       "load_path": "references/domains/README.md"
     },

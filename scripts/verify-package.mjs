@@ -29,9 +29,12 @@ try {
     "extensions/lib/apexlang-local-validate.mjs",
     "extensions/lib/apexlang-local-validator.py",
     "extensions/lib/apexlang-runtime-roundtrip.mjs",
+    "extensions/lib/apexlang-runtime-validate.mjs",
     "extensions/lib/apexlang-sqlcl-pty.py",
     "skills/apexlang/SKILL.md",
     "skills/apexlang/runtime/runtime.bundle.mjs",
+    "skills/apexlang/runtime/grammar_contract.mjs",
+    "skills/apexlang/runtime/lib/common.mjs",
     "skills/apexlang/runtime/internal/python/validate_apexlang.py",
     "skills/apexlang/tools/apexctl.mjs"
   ]) {

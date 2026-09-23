@@ -1,6 +1,21 @@
 {
   "rules": [
     {
+      "apply": "references/policies/memory-bank/30-pages/apex.cards-page.md",
+      "match": [
+        "visual summary",
+        "people cards",
+        "person cards",
+        "product cards",
+        "status cards",
+        "status tiles",
+        "entity cards",
+        "clickable cards",
+        "dynamic cards refresh",
+        "responsive cards"
+      ]
+    },
+    {
       "apply": "templates/region-components/calendar/calendar._common.md",
       "match": [
         "calendar region",
@@ -14,7 +29,14 @@
       "apply": "templates/region-components/cards/cards._common.md",
       "match": [
         "cards",
-        "cards region"
+        "cards region",
+        "visual summary",
+        "people cards",
+        "product cards",
+        "status tiles",
+        "clickable cards",
+        "dynamic cards refresh",
+        "responsive cards"
       ]
     },
     {
@@ -27,6 +49,18 @@
       "apply": "templates/region-components/classic-report/classic-report._common.md",
       "match": [
         "report"
+      ]
+    },
+    {
+      "apply": "templates/template-components/avatar/avatar._common.md",
+      "match": [
+        "standalone avatar",
+        "avatar region",
+        "avatar report",
+        "avatar report region",
+        "avatar template component",
+        "theme template component avatar",
+        "themeTemplateComponent/avatar"
       ]
     },
     {
@@ -52,18 +86,92 @@
       "match": [
         "list region",
         "list",
+        "card list",
+        "list-region",
+        "list template"
+      ]
+    },
+    {
+      "apply": "templates/template-components/media-list/media-list._common.md",
+      "match": [
         "media list",
-        "card list"
+        "media list template component",
+        "media list region",
+        "standalone media list",
+        "Media List template component",
+        "theme template component media list",
+        "themeTemplateComponent/mediaList"
+      ]
+    },
+    {
+      "apply": "templates/region-components/region-display-selector/region-display-selector._common.md",
+      "match": [
+        "region display selector",
+        "rds",
+        "scroll window",
+        "switch between regions",
+        "view single region"
       ]
     },
     {
       "apply": "templates/template-components/metric-card/metric-card._common.md",
       "match": [
         "metric card",
+        "metric cards",
         "metric-card",
+        "metric card region",
+        "metric card template component",
         "kpi card",
         "kpi",
         "scorecard"
+      ]
+    },
+    {
+      "apply": "templates/template-components/metric-card/metric-card.partial-minimal.md",
+      "match": [
+        "partial metric card",
+        "single metric card partial",
+        "metric card partial mode"
+      ]
+    },
+    {
+      "apply": "templates/template-components/metric-card/metric-card.report-avatar-badge.md",
+      "match": [
+        "metric card avatar",
+        "metric card badge",
+        "metric card avatar and badge",
+        "kpi avatar",
+        "kpi badge"
+      ]
+    },
+    {
+      "apply": "templates/template-components/metric-card/metric-card.report-grouping-selection.md",
+      "match": [
+        "grouped metric card",
+        "grouped metric cards",
+        "metric card selection",
+        "selectable metric card",
+        "selectable metric cards"
+      ]
+    },
+    {
+      "apply": "templates/template-components/metric-card/metric-card.permutations.md",
+      "match": [
+        "metric card permutations",
+        "metric card permutation app",
+        "metric card qa app",
+        "all metric card variants",
+        "all metric card combinations"
+      ]
+    },
+    {
+      "apply": "templates/template-components/badge/badge._common.md",
+      "match": [
+        "badge",
+        "badge template component",
+        "badge region",
+        "standalone badge",
+        "themeTemplateComponent/badge"
       ]
     },
     {
